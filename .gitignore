@@ -1,0 +1,19 @@
+# Python byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python local enviroment
+venv/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# local settings
+.env
+
+# data and outputs
+datasets/*
+outputs/*
+plots/*
+.DS_Store
