@@ -1,0 +1,27 @@
+# Data processing
+numpy
+scipy
+pandas
+matplotlib
+seaborn
+jupyter
+
+# Provenance
+prov[dot]
+powerlaw
+
+# SQL DB
+psycopg2-binary
+sqlalchemy
+
+# ML packages
+scikit-learn
+imbalanced-learn
+
+# Utilities
+environs
+click
+requests
+
+# Graph kernels
+grakel
