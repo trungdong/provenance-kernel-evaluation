@@ -22,7 +22,9 @@ make plots
 
 [MIMIC-III](https://mimic.physionet.org) is an openly available dataset comprising de-identified health data associated with over 53,000 intensive care unit admissions at a hospital in the United States. It contains details collected from hospital stays of over 30,000 patients, including their vital signs and medical measurements, the procedures done on them and by whom, their diagnostics, etc. In this application, we use the data from MIMIC-III to reconstruct a patient's journey through the hospital in a provenance graph.
 
-The code to generate a provenance graph from a patient admission in the MIMIC dataset is provided in the folder [`scripts/mimic`](scripts/mimic). However, the code will need access to the MIMIC PostgreSQL database. To gain access to the data, please follow the [instructions here](https://mimic.physionet.org/gettingstarted/access/).
+The code to generate a provenance graph from a patient admission in the MIMIC dataset is provided in the folder [`scripts/mimic`](scripts/mimic). However, the code will need access to the MIMIC PostgreSQL database. To gain access to the data, please follow the [instructions here](https://mimic.physionet.org/gettingstarted/access/). Once a MIMIC database is accessible, update the environment variable `MIMIC_DB_URI` in the file [`.env`](.env) to the correct database URI.
+
+To exclude the experiments on the MIMIC dataset, remove `MIMIC-PXC7` from the list of datasets to be processed defined in the `DATASETS` variable of the [`Makefile`](Makefile#L6).
 
 ### CollabMap
 
