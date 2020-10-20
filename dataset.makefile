@@ -22,6 +22,7 @@ clean-app-data:
 PYTHON_F_KERNELS = $(shell echo $(OUTPUT)/kernels/F{A,G}_{0..5}.pickled)
 
 $(PYTHON_F_KERNELS): $(OUTPUT)/graphs.pickled
+	@mkdir -p $(OUTPUT)/kernels
 	@$(PYTHON) scripts/gen-flattypes-kernel-tables.py $(DATASET_FOLDER) $(OUTPUT)
 
 clean-kernels:
