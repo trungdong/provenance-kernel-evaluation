@@ -46,14 +46,13 @@ print(f"Generated {len(cv_sets)} cross-validation train/test sets.")
 print(
     "--- Testing prediction using classic ML algorithms on provenance network metrics ---"
 )
-pna_results = test_prediction_on_classifiers(
+results = test_prediction_on_classifiers(
     selected_graphs[NETWORK_METRIC_NAMES],
     selected_graphs.dead,
     cv_sets,
     test_prefix="PNA-",
 )
-pna_results["time"] = selected_graphs.timings_PNA.sum()
-results = results.append(pna_results, ignore_index=True)
+results["time"] = selected_graphs.timings_PNA.sum()
 
 print("--- Testing prediction using generic graph kernels ---")
 results = results.append(
