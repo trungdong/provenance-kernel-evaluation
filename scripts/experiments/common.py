@@ -218,20 +218,6 @@ def test_prediction_on_kernels(
     results = pd.DataFrame()
     # Testing the provenance kernels
     for level in range(6):
-        for kernel_set in ["Ekernels", "Fkernels"]:
-            method_id = f"PGK{kernel_set[0]}-{level}"
-            scores = score_accuracy_kernels(
-                graphs, kernels_folder, kernel_set, level, y_column=y_column, cv=cv,
-            )
-            data = {
-                score_type: scores[score_field]
-                for score_type, score_field in zip(scoring, score_fields)
-            }
-            data["method"] = method_id
-            data["time"] = -1.0
-            results = results.append(pd.DataFrame(data), ignore_index=True)
-
-        # testing the new Python-based flat provenance type kernels
         for kernel_set in ["FG", "FA"]:
             method_id = f"{kernel_set}-{level}"
             scores = score_accuracy_kernels(
