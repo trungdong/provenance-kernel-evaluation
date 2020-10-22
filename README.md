@@ -6,7 +6,7 @@ This repository provides the source code and the datasets used in our evaluation
 
 ## Results
 
-The results are reported in our [pre-print on arXiv](https://arxiv.org/abs/2010.10343).
+The results are reported in our paper: [Provenance Graph Kernels](https://arxiv.org/abs/2010.10343).
 
 ## Setting up and running the pipeline
 
