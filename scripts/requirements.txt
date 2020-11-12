@@ -15,8 +15,7 @@ psycopg2-binary
 sqlalchemy
 
 # ML packages
-scikit-learn<0.23
-imbalanced-learn
+scikit-learn
 
 # Utilities
 environs
