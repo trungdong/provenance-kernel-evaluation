@@ -24,7 +24,6 @@ from grakel.kernels import (
     PropagationAttr,
     HadamardCode,
     MultiscaleLaplacian,
-    MultiscaleLaplacianFast,
     VertexHistogram,
     EdgeHistogram,
     GraphHopper,
