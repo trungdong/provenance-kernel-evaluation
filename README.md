@@ -16,6 +16,8 @@ The setting up and running of the evaluation pipeline is automated by the provid
 make plots
 ```
 
+The above command will run the whole pipeline, from setting up the Python virtual environment, the datasets, to running the experiments and generating the plots we included in the above paper. The plots are stored in the sub-folders `./plots` and the code to generate them can be seen in [this notebook](plots.ipynb).
+
 ## Datasets
 
 ### MIMIC-III

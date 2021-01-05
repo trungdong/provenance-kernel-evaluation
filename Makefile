@@ -46,6 +46,9 @@ datasets/PG-D:
 
 data: datasets/CM-Buildings datasets/CM-Routes datasets/CM-RouteSets datasets/PG-T datasets/PG-D
 
+plots: experiments
+	@echo "> Generating the plots and table included in the paper"
+	@venv/bin/ipython -c "%run plots.ipynb"
 
 # The following goals will be called using the dataset Makefile on the each dataset
 kernels types experiments plots clean-app-data clean-kernels clean-pickled-kernels clean-experiments: $(DATASETS)
