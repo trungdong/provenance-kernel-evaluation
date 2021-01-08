@@ -6,7 +6,10 @@ This repository provides the source code and the datasets used in our evaluation
 
 ## Results
 
-The results are reported in our paper: [Provenance Graph Kernels](https://arxiv.org/abs/2010.10343).
+The results are reported in our paper: [Provenance Graph Kernels](https://arxiv.org/abs/2010.10343) (see the [plots](plots.ipynb)).
+
+In addition, we illustrate how [provenance types can be used with white-box ML models](white-box-classification.ipynb) to improve the explainability of their decisions, for example.
+
 
 ## Setting up and running the pipeline
 
