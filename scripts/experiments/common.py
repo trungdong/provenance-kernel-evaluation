@@ -13,6 +13,7 @@ from grakel.kernels import (
     ShortestPath,
     ShortestPathAttr,
     WeisfeilerLehman,
+    WeisfeilerLehmanOptimalAssignment,
     NeighborhoodHash,
     PyramidMatch,
     SubgraphMatching,
@@ -35,7 +36,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.svm import SVC
 from sklearn.naive_bayes import GaussianNB
-from sklearn.model_selection import cross_validate, RepeatedStratifiedKFold
+from sklearn.model_selection import cross_validate, GridSearchCV, RepeatedStratifiedKFold
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import (
@@ -57,6 +58,7 @@ logger = logging.getLogger(__name__)
 N_JOBS = None  # type: Optional[int]
 NORMALIZING_GRAPH_KERNELS = True
 TIMEOUT = 15 * 60  # 15 mins in seconds
+SVM_C_PARAMS = [0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0]
 
 ML_CLASSIFIERS = {
     "DTree": DecisionTreeClassifier(max_depth=5),
@@ -160,10 +162,16 @@ def score_accuracy_kernels(
     clf = Pipeline(
         [
             ("scale", StandardScaler(with_mean=False)),
-            ("svm", SVC(gamma="scale", class_weight="balanced")),
+            ("svm", SVC(kernel="rbf", gamma="scale", class_weight="balanced")),
         ]
     )
-    scores = cross_validate(clf, X, graphs[y_column], scoring=scoring, cv=cv, n_jobs=-1)
+    gs = GridSearchCV(
+        estimator=clf,
+        param_grid={
+            "svm__C": SVM_C_PARAMS,
+        },
+    )
+    scores = cross_validate(gs, X, graphs[y_column], scoring=scoring, cv=cv, n_jobs=-1)
     print(
         "    Accuracy: %0.2f (+/- %0.2f)"
         % (scores["test_accuracy"].mean(), scores["test_accuracy"].std() * 2)
@@ -256,11 +264,38 @@ GRAKEL_KERNELS = {
     "GK-NH": lambda: NeighborhoodHash(
         n_jobs=N_JOBS, normalize=NORMALIZING_GRAPH_KERNELS
     ),
+    "GK-HC-1": lambda: HadamardCode(
+        n_iter=1, n_jobs=N_JOBS, normalize=NORMALIZING_GRAPH_KERNELS
+    ),
+    "GK-HC-2": lambda: HadamardCode(
+        n_iter=2, n_jobs=N_JOBS, normalize=NORMALIZING_GRAPH_KERNELS
+    ),
+    "GK-HC-3": lambda: HadamardCode(
+        n_iter=3, n_jobs=N_JOBS, normalize=NORMALIZING_GRAPH_KERNELS
+    ),
+    "GK-HC-4": lambda: HadamardCode(
+        n_iter=4, n_jobs=N_JOBS, normalize=NORMALIZING_GRAPH_KERNELS
+    ),
     "GK-HC-5": lambda: HadamardCode(
         n_iter=5, n_jobs=N_JOBS, normalize=NORMALIZING_GRAPH_KERNELS
     ),
     "GK-NSPD": lambda: NeighborhoodSubgraphPairwiseDistance(
         normalize=NORMALIZING_GRAPH_KERNELS
+    ),
+    "GK-WL-OA-1": lambda: WeisfeilerLehmanOptimalAssignment(
+        n_iter=1, n_jobs=N_JOBS, normalize=NORMALIZING_GRAPH_KERNELS
+    ),
+    "GK-WL-OA-2": lambda: WeisfeilerLehmanOptimalAssignment(
+        n_iter=2, n_jobs=N_JOBS, normalize=NORMALIZING_GRAPH_KERNELS
+    ),
+    "GK-WL-OA-3": lambda: WeisfeilerLehmanOptimalAssignment(
+        n_iter=3, n_jobs=N_JOBS, normalize=NORMALIZING_GRAPH_KERNELS
+    ),
+    "GK-WL-OA-4": lambda: WeisfeilerLehmanOptimalAssignment(
+        n_iter=4, n_jobs=N_JOBS, normalize=NORMALIZING_GRAPH_KERNELS
+    ),
+    "GK-WL-OA-5": lambda: WeisfeilerLehmanOptimalAssignment(
+        n_iter=5, n_jobs=N_JOBS, normalize=NORMALIZING_GRAPH_KERNELS
     ),
 }
 
@@ -321,8 +356,14 @@ def test_prediction_on_Grakel_kernels(
 
         if not has_timed_out:
             clf = SVC(kernel="precomputed", gamma="scale", class_weight="balanced")
+            gs = GridSearchCV(
+                estimator=clf,
+                param_grid={
+                    "C": SVM_C_PARAMS,
+                },
+            )
             scores = cross_validate(
-                clf, X, graphs[y_column], scoring=scoring, cv=cv, n_jobs=-1
+                gs, X, graphs[y_column], scoring=scoring, cv=cv, n_jobs=-1
             )
             print(
                 "Accuracy: %0.2f (+/- %0.2f) <-- %s"
