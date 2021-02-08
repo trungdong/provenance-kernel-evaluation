@@ -16,7 +16,7 @@ venv: venv/bin/activate
 venv/bin/activate: scripts/requirements.txt
 	@echo "> Setting up the Python virtual environment"
 	@test -d venv || python3 -m venv ./venv
-	@. venv/bin/activate; pip install -U pip; pip install -Ur scripts/requirements.txt
+	@. venv/bin/activate; pip install -U setuptools pip wheel; pip install -Ur scripts/requirements.txt
 	@touch venv/bin/activate
 
 # Setting up the datasets
