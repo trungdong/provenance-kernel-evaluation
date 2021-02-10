@@ -58,9 +58,8 @@ $(DATASETS): venv data
 	@$(MAKE) --file $(MAKEFILE_SINGLE) $(MAKECMDGOALS) DATASET=$@
 
 outputs/results.tar:
-	@rm -f outputs/results.tar
 	@find outputs -name "scoring.pickled" | xargs tar -cvf outputs/results.tar
-	@find outputs -name "timings.pickled" | xargs tar -cvf outputs/results.tar
+	@find outputs -name "timings.pickled" | xargs tar -rvf outputs/results.tar
 	@find outputs -name "selected.csv" | xargs tar -rvf outputs/results.tar
 	@[ ! -f outputs/logs.txt ] || tar -rvf outputs/results.tar outputs/logs.txt
 	@tar -rvf outputs/results.tar plots/
