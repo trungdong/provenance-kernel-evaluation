@@ -33,7 +33,7 @@ def run_experiment(dataset_id: str):
     if selected_samples_filepath.exists():
         # Loading the previously saved balanced dataset to reproduce the same experiment
         selected_graphfiles = pd.read_csv(selected_samples_filepath, index_col=0)
-        selected_graphs = graphs_index.iloc[selected_graphfiles.index]
+        selected_graphs = graphs_index.iloc[selected_graphfiles.index].copy()
     else:
         # This is the first time we run this experiment
         # Balancing the dataset on the trusted attribute
