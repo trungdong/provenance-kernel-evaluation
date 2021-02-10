@@ -26,16 +26,24 @@ graphs_index = load_graph_index(dataset_id)
 
 print("> Testing predicting a patient is dead at the end of this admission")
 
-# Selecting relevant graphs and balancing the dataset
-print("Current number of dead values:\n", graphs_index.dead.value_counts())
-selected_graphs = graphs_index[graphs_index.dead == True]
-selected_graphs = selected_graphs.append(
-    graphs_index[graphs_index.dead == False].sample(len(selected_graphs))
-)
-print(
-    "Number of dead values in selected graphs:\n", selected_graphs.dead.value_counts()
-)
-selected_graphs.graph_file.to_csv(selected_samples_filepath)
+if selected_samples_filepath.exists():
+    # Loading the previously saved balanced dataset to reproduce the same experiment
+    selected_graphfiles = pd.read_csv(selected_samples_filepath, index_col=0)
+    selected_graphs = graphs_index.iloc[selected_graphfiles.index]
+else:
+    # This is the first time we run this experiment
+    # Selecting relevant graphs and balancing the dataset
+    print("Current number of dead values:\n", graphs_index.dead.value_counts())
+    selected_graphs = graphs_index[graphs_index.dead == True]
+    selected_graphs = selected_graphs.append(
+        graphs_index[graphs_index.dead == False].sample(len(selected_graphs))
+    )
+    print(
+        "Number of dead values in selected graphs:\n",
+        selected_graphs.dead.value_counts(),
+    )
+    # saving the list of selected graphs for later reproduction of this experiment
+    selected_graphs.graph_file.to_csv(selected_samples_filepath)
 
 print(f"Generating GraKeL graphs for {len(selected_graphs)} files")
 selected_graphs = build_grakel_graphs(selected_graphs, dataset_folder)

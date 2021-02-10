@@ -29,7 +29,7 @@ def run_experiment(dataset_id: str):
 
     print(f"> Testing predicting the team labels for {dataset_id}...")
 
-    # Balancing the dataset on the trusted attribute
+    # This dataset is balanced and does not need balancing
     print(
         "Current number of players in each team:\n", graphs_index.label.value_counts()
     )

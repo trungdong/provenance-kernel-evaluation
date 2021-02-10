@@ -30,17 +30,24 @@ def run_experiment(dataset_id: str):
 
     print(f"> Testing predicting the data quality labels for {dataset_id}...")
 
-    # Balancing the dataset on the trusted attribute
-    print("Current number of trusted values:\n", graphs_index.trusted.value_counts())
-    selected_graphs = graphs_index[graphs_index.trusted == False]
-    selected_graphs = selected_graphs.append(
-        graphs_index[graphs_index.trusted == True].sample(len(selected_graphs))
-    )
-    print(
-        "Number of trusted values in selected graphs:\n",
-        selected_graphs.trusted.value_counts(),
-    )
-    selected_graphs.graph_file.to_csv(selected_samples_filepath)
+    if selected_samples_filepath.exists():
+        # Loading the previously saved balanced dataset to reproduce the same experiment
+        selected_graphfiles = pd.read_csv(selected_samples_filepath, index_col=0)
+        selected_graphs = graphs_index.iloc[selected_graphfiles.index]
+    else:
+        # This is the first time we run this experiment
+        # Balancing the dataset on the trusted attribute
+        print("Current number of trusted values:\n", graphs_index.trusted.value_counts())
+        selected_graphs = graphs_index[graphs_index.trusted == False]
+        selected_graphs = selected_graphs.append(
+            graphs_index[graphs_index.trusted == True].sample(len(selected_graphs))
+        )
+        print(
+            "Number of trusted values in selected graphs:\n",
+            selected_graphs.trusted.value_counts(),
+        )
+        # saving the list of selected graphs for later reproduction of this experiment
+        selected_graphs.graph_file.to_csv(selected_samples_filepath)
 
     print(f"Generating GraKeL graphs for {len(selected_graphs)} files")
     selected_graphs = build_grakel_graphs(selected_graphs, dataset_folder)
