@@ -57,6 +57,18 @@ $(DATASETS): venv data
 	@echo "--------- Execute [$(MAKECMDGOALS)] on $@ dataset ---------"
 	@$(MAKE) --file $(MAKEFILE_SINGLE) $(MAKECMDGOALS) DATASET=$@
 
+outputs/results.tar:
+	@rm -f outputs/results.tar
+	@find outputs -name "scoring.pickled" | xargs tar -cvf outputs/results.tar
+	@find outputs -name "timings.pickled" | xargs tar -cvf outputs/results.tar
+	@find outputs -name "selected.csv" | xargs tar -rvf outputs/results.tar
+	@[ ! -f outputs/logs.txt ] || tar -rvf outputs/results.tar outputs/logs.txt
+	@tar -rvf outputs/results.tar plots/
+
+outputs/results.tar.gz: outputs/results.tar
+	@gzip outputs/results.tar
+
+save-results: outputs/results.tar.gz
 
 # Other maintenance goals
 clean:
@@ -65,5 +77,5 @@ clean:
 	rm -rf outputs
 	rm -rf plots
 
-.PHONY: help data clean kernels types experiments plots clean-app-data clean-kernels clean-pickled-kernels clean-experiments
+.PHONY: help data clean kernels types experiments plots clean-app-data clean-kernels clean-pickled-kernels clean-experiments save-results
 .PHONY: $(DATASETS)
