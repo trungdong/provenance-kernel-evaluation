@@ -93,7 +93,10 @@ def count_fp_types(types: Iterable[FlatProvenanceType]) -> Dict[str, int]:
 
 
 def calculate_flat_provenance_types(
-    prov_doc: ProvDocument, to_level: int = 0, including_primitives_types: bool = True
+    prov_doc: ProvDocument,
+    to_level: int = 0,
+    including_primitives_types: bool = True,
+    counting_wdf_as_two: bool = False,
 ) -> MultiLevelTypeDict:
     # flatten all the bundles, if any
     prov_doc = prov_doc.flattened()
@@ -129,10 +132,20 @@ def calculate_flat_provenance_types(
             # propagating the types to the predecessors
             for rel_type, predecessor in predecessors[node]:
                 k_type = types + (frozenset({rel_type}),)  # type: FlatProvenanceType
-                fp_types[k][predecessor] = (
-                    join_flat_types(fp_types[k][predecessor], k_type)
-                    if predecessor in fp_types[k]
-                    else k_type
-                )
+                if counting_wdf_as_two and (rel_type == PROV_DERIVATION):
+                    k_p1_type = k_type + (
+                        frozenset({rel_type}),
+                    )  # type: FlatProvenanceType
+                    fp_types[k + 1][predecessor] = (
+                        join_flat_types(fp_types[k + 1][predecessor], k_p1_type)
+                        if predecessor in fp_types[k + 1]
+                        else k_p1_type
+                    )
+                else:
+                    fp_types[k][predecessor] = (
+                        join_flat_types(fp_types[k][predecessor], k_type)
+                        if predecessor in fp_types[k]
+                        else k_type
+                    )
 
     return fp_types
