@@ -225,7 +225,7 @@ def test_prediction_on_kernels(
     results = pd.DataFrame()
     # Testing the provenance kernels
     for level in range(6):
-        for kernel_set in ["FG". "DG", "FA", "DA"]:
+        for kernel_set in ["FG", "DG", "FA", "DA"]:
             method_id = f"{kernel_set}-{level}"
             scores = score_accuracy_kernels(
                 graphs, kernels_folder, kernel_set, level, y_column=y_column, cv=cv,
