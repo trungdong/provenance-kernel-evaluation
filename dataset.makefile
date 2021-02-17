@@ -19,9 +19,10 @@ clean-app-data:
 	rm $(OUTPUT)/graphs.pickled
 
 # Generating provenance kernels
-PYTHON_F_KERNELS = $(shell echo $(OUTPUT)/kernels/F{A,G}_{0..5}.pickled)
+PYTHON_KERNELS = $(shell echo $(OUTPUT)/kernels/{F,D}{A,G}_{0..5}.pickled)
 
-$(PYTHON_F_KERNELS): $(OUTPUT)/graphs.pickled
+$(PYTHON_KERNELS): $(OUTPUT)/graphs.pickled
+	@echo "> Producing provenance kernels for $${DATASET}..."
 	@mkdir -p $(OUTPUT)/kernels
 	@$(PYTHON) scripts/gen-flattypes-kernel-tables.py $(DATASET_FOLDER) $(OUTPUT)
 
@@ -29,13 +30,13 @@ clean-kernels:
 	rm -rf $(OUTPUT)/kernels/*.pickled
 
 # Counting the provenance types produced by each kernels
-$(OUTPUT)/type_counts.csv: $(PYTHON_F_KERNELS)
-	@$(PYTHON) scripts/count-kernel-types.py $@ $(PYTHON_F_KERNELS)
+$(OUTPUT)/type_counts.csv: $(PYTHON_KERNELS)
+	@$(PYTHON) scripts/count-kernel-types.py $@ $(PYTHON_KERNELS)
 
-kernels: $(PYTHON_F_KERNELS) $(OUTPUT)/type_counts.csv
+kernels: $(PYTHON_KERNELS) $(OUTPUT)/type_counts.csv
 
 # Running all the experiments on this dataset
-$(OUTPUT)/scoring.pickled: $(OUTPUT)/graphs.pickled $(PYTHON_F_KERNELS)
+$(OUTPUT)/scoring.pickled: $(OUTPUT)/graphs.pickled $(PYTHON_KERNELS)
 	$(PYTHON) -m scripts.experiments.$(DATASET)
 
 experiments: $(OUTPUT)/scoring.pickled

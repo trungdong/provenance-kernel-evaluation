@@ -23,11 +23,15 @@ def count_flatprovenancetypes_for_graphs(
     graph_filenames: Collection[str],
     level: int,
     including_primitives_types: bool,
+    counting_wdf_as_two: bool = False,
 ) -> Tuple[List[Dict[int, Dict[str, int]]], List[List[float]]]:
     logger.debug(
-        "Calculating flat provenance types up to level %s (with application types: %s) for %d graphs...",
+        "Producing linear provenance types up to level %s "
+        "(with application types: %s, counting derivations as 2-length edges: %s) "
+        "for %d graphs...",
         level,
         including_primitives_types,
+        counting_wdf_as_two,
         len(graph_filenames),
     )
     results = []  # type: List[Dict[int, Dict[str, int]]]
@@ -41,7 +45,7 @@ def count_flatprovenancetypes_for_graphs(
             timer = Timer(verbose=False)
             with timer:
                 fp_types = calculate_flat_provenance_types(
-                    prov_doc, h, including_primitives_types
+                    prov_doc, h, including_primitives_types, counting_wdf_as_two
                 )
             # counting only the last level
             features[h] = count_fp_types(fp_types[h].values())
@@ -142,6 +146,7 @@ def main(dataset_folder: str, output_folder: str, to_level: int):
         graphs.graph_file,
         level=to_level,
         including_primitives_types=False,
+        counting_wdf_as_two=False,
     )
     save_feature_tables(
         fpt_count_list,
@@ -156,12 +161,36 @@ def main(dataset_folder: str, output_folder: str, to_level: int):
         columns=[f"FG_{h}" for h in range(to_level + 1)],
         index=graphs.graph_file,
     )
-    # copy PNA timings over
-    # timings_df["PNA"] = graphs.timings_PNA
+    # same types but counting derivations as 2-length edges
+    fpt_count_list, timings = count_flatprovenancetypes_for_graphs(
+        dataset_path,
+        graphs.graph_file,
+        level=to_level,
+        including_primitives_types=False,
+        counting_wdf_as_two=True,
+    )
+    save_feature_tables(
+        fpt_count_list,
+        graphs.graph_file,
+        output_path,
+        kernel_set="DG",
+        to_level=to_level,
+    )
+    timings_df = timings_df.join(
+        pd.DataFrame(
+            timings,
+            columns=[f"DG_{h}" for h in range(to_level + 1)],
+            index=graphs.graph_file,
+        )
+    )
 
     # Flat types - Including application types
     fpt_count_list, timings = count_flatprovenancetypes_for_graphs(
-        dataset_path, graphs.graph_file, level=to_level, including_primitives_types=True
+        dataset_path,
+        graphs.graph_file,
+        level=to_level,
+        including_primitives_types=True,
+        counting_wdf_as_two=False,
     )
     save_feature_tables(
         fpt_count_list,
@@ -177,6 +206,29 @@ def main(dataset_folder: str, output_folder: str, to_level: int):
             index=graphs.graph_file,
         )
     )
+    # same types but counting derivations as 2-length edges
+    fpt_count_list, timings = count_flatprovenancetypes_for_graphs(
+        dataset_path,
+        graphs.graph_file,
+        level=to_level,
+        including_primitives_types=True,
+        counting_wdf_as_two=True,
+    )
+    save_feature_tables(
+        fpt_count_list,
+        graphs.graph_file,
+        output_path,
+        kernel_set="DA",
+        to_level=to_level,
+    )
+    timings_df = timings_df.join(
+        pd.DataFrame(
+            timings,
+            columns=[f"DA_{h}" for h in range(to_level + 1)],
+            index=graphs.graph_file,
+        )
+    )
+
     # Write timing information back to a pickled DataFrame file
     timings_filepath = output_path / "timings.pickled"
     timings_df.to_pickle(timings_filepath)
