@@ -6,6 +6,7 @@ import signal
 import timeit
 
 import pandas as pd
+from scipy import stats
 
 
 ROOT_DIR = Path(__file__).parents[1]
@@ -73,3 +74,41 @@ def load_graph_index(dataset_id: str) -> pd.DataFrame:
         lambda col_name: "timings_" + col_name, axis="columns", copy=False
     )
     return graphs_index.join(timings, on="graph_file")
+
+
+def ranksums(
+    df: pd.DataFrame,
+    methods,
+    scoring="accuracy",
+    pvalue_significant=0.05,
+    verbose=False,
+):
+    # returns None if the difference between the two methods is not statistically significant
+    # according to the ranksums test; otherwise, returns the mean difference value.
+
+    assert len(methods) == 2
+    assert scoring in df.columns
+
+    if verbose:
+        print("Wilcoxon rank-sum test:", scoring)
+        print(f"> Comparing {methods[0]} vs {methods[1]}")
+
+    p1 = df[df.method == methods[0]]
+    p1.reset_index(inplace=True)
+    p1_mean = p1[scoring].mean()
+
+    p2 = df[df.method == methods[1]]
+    p2.reset_index(inplace=True)
+    p2_mean = p2[scoring].mean()
+
+    mean_diff = p1_mean - p2_mean
+    _, pvalue = stats.ranksums(p1[scoring], p2[scoring])
+    if pvalue > pvalue_significant:
+        if verbose:
+            print(f"> Insignificant (pvalue = {pvalue * 100:.1f}%)")
+        return None
+    else:
+        if verbose:
+            print(f"> *Significant* (pvalue = {pvalue * 100:.1f}%)")
+            print(f"> Mean difference: {mean_diff * 100:+.1f}%")
+        return mean_diff
