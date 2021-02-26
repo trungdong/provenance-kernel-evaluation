@@ -56,6 +56,7 @@ print(
 )
 results = test_prediction_on_classifiers(
     selected_graphs[NETWORK_METRIC_NAMES],
+    outputs_folder,
     selected_graphs.dead,
     cv_sets,
     test_prefix="PNA-",
@@ -64,7 +65,7 @@ results["time"] = selected_graphs.timings_PNA.sum()
 
 print("--- Testing prediction using generic graph kernels ---")
 results = results.append(
-    test_prediction_on_Grakel_kernels(selected_graphs, "dead", cv_sets),
+    test_prediction_on_Grakel_kernels(selected_graphs, outputs_folder, "dead", cv_sets),
     ignore_index=True,
 )
 

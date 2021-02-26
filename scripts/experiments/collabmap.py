@@ -37,7 +37,9 @@ def run_experiment(dataset_id: str):
     else:
         # This is the first time we run this experiment
         # Balancing the dataset on the trusted attribute
-        print("Current number of trusted values:\n", graphs_index.trusted.value_counts())
+        print(
+            "Current number of trusted values:\n", graphs_index.trusted.value_counts()
+        )
         selected_graphs = graphs_index[graphs_index.trusted == False]
         selected_graphs = selected_graphs.append(
             graphs_index[graphs_index.trusted == True].sample(len(selected_graphs))
@@ -78,6 +80,7 @@ def run_experiment(dataset_id: str):
 
     results = test_prediction_on_classifiers(
         selected_graphs[NETWORK_METRIC_NAMES],
+        outputs_folder,
         selected_graphs.trusted,
         cv_sets,
         test_prefix="PNA-",
@@ -85,7 +88,9 @@ def run_experiment(dataset_id: str):
     results["time"] = selected_graphs.timings_PNA.sum()
 
     results = results.append(
-        test_prediction_on_Grakel_kernels(selected_graphs, "trusted", cv_sets),
+        test_prediction_on_Grakel_kernels(
+            selected_graphs, outputs_folder, "trusted", cv_sets
+        ),
         ignore_index=True,
     )
 

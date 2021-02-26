@@ -43,11 +43,15 @@ def run_experiment(dataset_id: str):
     print(f"Generated {len(cv_sets)} cross-validation train/test sets.")
 
     results = test_prediction_on_classifiers(
-        selected_graphs[POKEMON_GO_DATA_COLUMNS], selected_graphs.label, cv_sets
+        selected_graphs[POKEMON_GO_DATA_COLUMNS],
+        outputs_folder,
+        selected_graphs.label,
+        cv_sets,
     )
 
     pna_results = test_prediction_on_classifiers(
         selected_graphs[NETWORK_METRIC_NAMES],
+        outputs_folder,
         selected_graphs.label,
         cv_sets,
         test_prefix="PNA-",
@@ -57,7 +61,11 @@ def run_experiment(dataset_id: str):
 
     results = results.append(
         test_prediction_on_Grakel_kernels(
-            selected_graphs, "label", cv_sets, ignore_kernels={"GK-GSamp"}
+            selected_graphs,
+            outputs_folder,
+            "label",
+            cv_sets,
+            ignore_kernels={"GK-GSamp"},
         ),
         ignore_index=True,
     )

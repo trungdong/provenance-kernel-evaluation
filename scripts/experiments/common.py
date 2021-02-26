@@ -36,7 +36,11 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.neural_network import MLPClassifier
 from sklearn.svm import SVC
 from sklearn.naive_bayes import GaussianNB
-from sklearn.model_selection import cross_validate, GridSearchCV, RepeatedStratifiedKFold
+from sklearn.model_selection import (
+    cross_validate,
+    GridSearchCV,
+    RepeatedStratifiedKFold,
+)
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import (
@@ -84,6 +88,21 @@ scoring = {
 score_fields = list(map("test_{}".format, scoring))
 
 
+def save_experiment_scorings(output_path: Path, method_id: str, scorings: pd.DataFrame):
+    scorings_path = output_path / "scorings"
+    # making sure that the folder is there
+    scorings_path.mkdir(parents=True, exist_ok=True)
+    scorings_filepath = scorings_path / (method_id + ".pickled")
+    scorings.to_pickle(scorings_filepath)
+
+
+def load_experiment_scorings(output_path: Path, method_id: str):
+    scorings_filepath = output_path / "scorings" / (method_id + ".pickled")
+    if not scorings_filepath.is_file():
+        return None
+    return pd.read_pickle(scorings_filepath)
+
+
 def get_fixed_CV_sets(X, y, n_splits=10, n_repeats=10, random_state=None):
     rskf = RepeatedStratifiedKFold(
         n_splits=n_splits, n_repeats=n_repeats, random_state=random_state
@@ -109,16 +128,16 @@ def pd_df_to_coo(df: pd.DataFrame):
 
 
 def merge_timings_to_graph_index(graphs: pd.DataFrame, timings: pd.DataFrame):
-    timings = timings.rename(lambda col_name: "timings_" + col_name, axis="columns", copy=False)
+    timings = timings.rename(
+        lambda col_name: "timings_" + col_name, axis="columns", copy=False
+    )
     return graphs.join(timings, on="graph_file")
 
 
 def read_kernel_dataframes(
-    kernels_folder: Path, kernel_set: str, from_level: int = 0, to_level: int = None
+    output_path: Path, kernel_set: str, from_level: int = 0, to_level: int = None
 ) -> pd.DataFrame:
-    kernel_df_filepath = (
-        kernels_folder / "kernels" / f"{kernel_set}_{from_level}.pickled"
-    )
+    kernel_df_filepath = output_path / "kernels" / f"{kernel_set}_{from_level}.pickled"
     kernels_df = pd.read_pickle(kernel_df_filepath)
 
     if to_level is not None:
@@ -126,7 +145,7 @@ def read_kernel_dataframes(
         while level < to_level:
             level += 1  # reading the next level
             kernel_df_filepath = (
-                kernels_folder / "kernels" / f"{kernel_set}_{level}.pickled"
+                output_path / "kernels" / f"{kernel_set}_{level}.pickled"
             )
             logger.debug("Reading pickled dataframe: %s", kernel_df_filepath)
             df = pd.read_pickle(kernel_df_filepath)
@@ -137,7 +156,7 @@ def read_kernel_dataframes(
 
 def score_accuracy_kernels(
     graphs: pd.DataFrame,
-    kernels_folder: Path,
+    output_path: Path,
     kernel_set: str = "summary",
     level: int = 0,
     y_column: str = "label",
@@ -146,7 +165,7 @@ def score_accuracy_kernels(
 ):
     print(f"> Testing {kernel_set} up to level-{level}:")
     print("  - Reading kernels...")
-    kernels_df = read_kernel_dataframes(kernels_folder, kernel_set, to_level=level)
+    kernels_df = read_kernel_dataframes(output_path, kernel_set, to_level=level)
     # filtering the kernels to only selected graphs
     selected_kernels = kernels_df.loc[graphs.graph_file]
 
@@ -180,7 +199,7 @@ def score_accuracy_kernels(
 
 
 def test_prediction_on_classifiers(
-    X: pd.DataFrame, y: pd.Series, cv_sets=10, test_prefix=None
+    X: pd.DataFrame, output_path: Path, y: pd.Series, cv_sets=10, test_prefix=None
 ):
     if cv_sets is None:
         cv = 10
@@ -191,29 +210,38 @@ def test_prediction_on_classifiers(
 
     results = pd.DataFrame()
     for clf_name, clf in ML_CLASSIFIERS.items():
-        timer = Timer()
-        with timer:
-            scores = cross_validate(clf, X, y, scoring=scoring, cv=cv, n_jobs=-1)
-        print(
-            "Accuracy: %0.2f (+/- %0.2f) <-- %s"
-            % (
-                scores["test_accuracy"].mean(),
-                scores["test_accuracy"].std() * 2,
-                clf_name,
+        method_id = clf_name if test_prefix is None else test_prefix + clf_name
+        # load existing scorings
+        scorings = load_experiment_scorings(output_path, method_id)
+
+        if scorings is None:
+            timer = Timer()
+            with timer:
+                scores = cross_validate(clf, X, y, scoring=scoring, cv=cv, n_jobs=-1)
+            print(
+                "Accuracy: %0.2f (+/- %0.2f) <-- %s"
+                % (
+                    scores["test_accuracy"].mean(),
+                    scores["test_accuracy"].std() * 2,
+                    clf_name,
+                )
             )
-        )
-        data = {
-            score_type: scores[score_field]
-            for score_type, score_field in zip(scoring, score_fields)
-        }
-        data["method"] = clf_name if test_prefix is None else test_prefix + clf_name
-        data["time"] = timer.interval
-        results = results.append(pd.DataFrame(data), ignore_index=True)
+            data = {
+                score_type: scores[score_field]
+                for score_type, score_field in zip(scoring, score_fields)
+            }
+            data["method"] = method_id
+            data["time"] = timer.interval
+            scorings = pd.DataFrame(data)
+            save_experiment_scorings(output_path, method_id, scorings)
+
+        results = results.append(scorings, ignore_index=True)
+
     return results
 
 
 def test_prediction_on_kernels(
-    graphs: pd.DataFrame, kernels_folder: Path, y_column: str, cv_sets=10
+    graphs: pd.DataFrame, output_path: Path, y_column: str, cv_sets=10
 ):
     if cv_sets is None:
         cv = 10
@@ -227,16 +255,30 @@ def test_prediction_on_kernels(
     for level in range(6):
         for kernel_set in ["FG", "DG", "FA", "DA"]:
             method_id = f"{kernel_set}-{level}"
-            scores = score_accuracy_kernels(
-                graphs, kernels_folder, kernel_set, level, y_column=y_column, cv=cv,
-            )
-            data = {
-                score_type: scores[score_field]
-                for score_type, score_field in zip(scoring, score_fields)
-            }
-            data["method"] = method_id
-            data["time"] = graphs[f"timings_{kernel_set}_{level}"].sum()
-            results = results.append(pd.DataFrame(data), ignore_index=True)
+
+            # load existing scorings
+            scorings = load_experiment_scorings(output_path, method_id)
+
+            if scorings is None:
+                # run the experiment
+                scores = score_accuracy_kernels(
+                    graphs,
+                    output_path,
+                    kernel_set,
+                    level,
+                    y_column=y_column,
+                    cv=cv,
+                )
+                data = {
+                    score_type: scores[score_field]
+                    for score_type, score_field in zip(scoring, score_fields)
+                }
+                data["method"] = method_id
+                data["time"] = graphs[f"timings_{kernel_set}_{level}"].sum()
+                scorings = pd.DataFrame(data)
+                save_experiment_scorings(output_path, method_id, scorings)
+
+            results = results.append(scorings, ignore_index=True)
 
     return results
 
@@ -324,7 +366,11 @@ NOT_TESTED = {
 
 
 def test_prediction_on_Grakel_kernels(
-    graphs: pd.DataFrame, y_column: str, cv_sets=None, ignore_kernels=None
+    graphs: pd.DataFrame,
+    output_path: Path,
+    y_column: str,
+    cv_sets=None,
+    ignore_kernels=None,
 ):
     if cv_sets is None:
         cv = 10
@@ -340,21 +386,29 @@ def test_prediction_on_Grakel_kernels(
             logger.info("Skipping testing kernel: %s", method_id)
             continue
 
-        logger.info("Testing graph kernel: %s", method_id)
-        print("Testing GraKeL kernel:", method_id)
-        gk = gk_class()
-        has_timed_out = False
-        try:
-            timer = Timer(timeout=TIMEOUT)
-            with timer:
-                # TODO: break if timed out
-                # only time the kerneling cost
-                X = gk.fit_transform(graphs.grakel_graphs)
-        except TimeoutException:
-            has_timed_out = True
-            print("*** TIMED OUT - %s ***" % method_id)
+        # load existing scorings
+        scorings = load_experiment_scorings(output_path, method_id)
 
-        if not has_timed_out:
+        if scorings is None:
+            # run the experiment
+            logger.info("Testing graph kernel: %s", method_id)
+            print("Testing GraKeL kernel:", method_id)
+            gk = gk_class()
+            has_timed_out = False
+            try:
+                timer = Timer(timeout=TIMEOUT)
+                with timer:
+                    # TODO: break if timed out
+                    # only time the kerneling cost
+                    X = gk.fit_transform(graphs.grakel_graphs)
+            except TimeoutException:
+                has_timed_out = True
+                print("*** TIMED OUT - %s ***" % method_id)
+
+            if has_timed_out:
+                # skip this, go to the next experiment
+                continue
+
             clf = SVC(kernel="precomputed", gamma="scale", class_weight="balanced")
             gs = GridSearchCV(
                 estimator=clf,
@@ -379,5 +433,8 @@ def test_prediction_on_Grakel_kernels(
             }
             data["method"] = method_id
             data["time"] = timer.interval
-            results = results.append(pd.DataFrame(data), ignore_index=True)
+            scorings = pd.DataFrame(data)
+            save_experiment_scorings(output_path, method_id, scorings)
+
+        results = results.append(scorings, ignore_index=True)
     return results
