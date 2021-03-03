@@ -9,7 +9,14 @@ import logging
 from pathlib import Path
 import subprocess
 
-PROVCONVERT_PATH = "provconvert"
+import environs
+
+# Reading local environment variables
+env = environs.Env()
+env.read_env()
+
+PROVCONVERT_PATH = env("PROVCONVERT", default="provconvert")
+PROVMAN_PATH = env("PROVMAN", default="provmanagement")
 logger = logging.getLogger(__name__)
 
 
@@ -64,3 +71,50 @@ def provconvert_merge(filepaths, to_filepath: str):
         ["-merge", "-", "-outfile", to_filepath, "-flatten"],
         "\n".join(filepaths),
     )
+
+
+def provman_kernelize(
+    filepath: Path,
+    outpath: Path,
+    summary_id: str,
+    level_from: int = 0,
+    level_to: int = 2,
+    level0: str = None,
+    no_primitives: bool = False,
+    readable_types: bool = False,
+    aggregating_types: bool = False,
+    triangle: bool = False,
+    return_cmd_only: bool = False,
+):
+    out_filepath = outpath / (summary_id + "-%level.features.json")
+    cmd_line_args = [
+        "kernelize",
+        "--infile",
+        filepath,
+        "--from",
+        level_from,
+        "--to",
+        level_to,
+        "-F",
+        out_filepath,
+    ]
+
+    if level0 is not None:
+        cmd_line_args.extend(["--level0", level0])
+
+    if no_primitives:
+        cmd_line_args.append("-n")
+
+    if readable_types:
+        cmd_line_args.append("-R")
+
+    if not aggregating_types:
+        cmd_line_args.extend(["--aggregate", "false"])
+
+    if triangle:
+        cmd_line_args.extend(["--triangle", "true"])
+
+    if return_cmd_only:
+        return " ".join(map(str, cmd_line_args))
+
+    call_external_tool(PROVMAN_PATH, cmd_line_args)
