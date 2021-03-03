@@ -76,7 +76,7 @@ def provconvert_merge(filepaths, to_filepath: str):
 def provman_kernelize(
     filepath: Path,
     outpath: Path,
-    summary_id: str,
+    file_id: str,
     level_from: int = 0,
     level_to: int = 2,
     level0: str = None,
@@ -86,7 +86,7 @@ def provman_kernelize(
     triangle: bool = False,
     return_cmd_only: bool = False,
 ):
-    out_filepath = outpath / (summary_id + "-%level.features.json")
+    out_filepath = outpath / (file_id + "-%level.features.json")
     cmd_line_args = [
         "kernelize",
         "--infile",
@@ -118,3 +118,7 @@ def provman_kernelize(
         return " ".join(map(str, cmd_line_args))
 
     call_external_tool(PROVMAN_PATH, cmd_line_args)
+
+
+def provman_batch(commands: str):
+    call_external_tool(PROVMAN_PATH, ["batch", "--infile", "-", "--outfile", "ignore", "--parallel", "true"], pipe_input=commands)

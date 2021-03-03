@@ -253,7 +253,7 @@ def test_prediction_on_kernels(
     results = pd.DataFrame()
     # Testing the provenance kernels
     for level in range(6):
-        for kernel_set in ["FG", "DG", "FA", "DA"]:
+        for kernel_set in ["FG", "DG", "TG", "FA", "DA", "TA"]:
             method_id = f"{kernel_set}-{level}"
 
             # load existing scorings
@@ -274,7 +274,11 @@ def test_prediction_on_kernels(
                     for score_type, score_field in zip(scoring, score_fields)
                 }
                 data["method"] = method_id
-                data["time"] = graphs[f"timings_{kernel_set}_{level}"].sum()
+                timings_column_name = f"timings_{kernel_set}_{level}"
+                try:
+                    data["time"] = graphs[timings_column_name].sum()
+                except KeyError:
+                    data["time"] = 0.0
                 scorings = pd.DataFrame(data)
                 save_experiment_scorings(output_path, method_id, scorings)
 
