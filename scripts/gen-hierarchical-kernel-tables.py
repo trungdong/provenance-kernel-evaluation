@@ -25,6 +25,9 @@ def generate_kenerlize_commands(
     config_path = config_folder / f"kernelize-{dataset}.json"
     config_path_str = str(config_path) if config_path.exists() else None
 
+    if config_path_str is not None:
+        logger.debug("Using config file: %s", config_path_str)
+
     # paths for variations of kernels and create them
     TA_kernels_path = output_path / "TA"
     TA_kernels_path.mkdir(parents=True, exist_ok=True)

@@ -1,0 +1,10 @@
+{
+  "comment": "Summarise MIMIC-PXC7",
+  "mapper": {
+  },
+  "ignore": [
+    "https://openprovenance.org/ns/mimic#Discharged"
+  ],
+  "properties": [
+  ]
+}
