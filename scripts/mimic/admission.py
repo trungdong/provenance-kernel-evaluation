@@ -1,6 +1,6 @@
 import datetime
 import logging
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 from pathlib import Path
 from typing import List, MutableMapping, Sequence
 
@@ -232,6 +232,9 @@ class Admission:
         db_patient = db.get_patient(self.db_session, self.db_admission.subject_id)
         self.patient = Patient(self.prov_bundle, db_patient)
 
+        # remember all the directly derived entities to avoid duplicated derivations later
+        derived_entities = defaultdict(set)
+
         for transfer in db.get_transfers(self.db_session, self.admission_id):
             if transfer.eventtype == "discharge":
                 # using the patient from the last transfer
@@ -242,7 +245,6 @@ class Admission:
 
             patient_in = self.get_patient_at_time(transfer.intime)
             patient_out = self.get_patient_at_time(transfer.outtime)
-            # patient_out.wasDerivedFrom(patient_in)
 
             activity_type = ns_type['Treating']
             unit_agent = get_unit_agent(
@@ -264,6 +266,10 @@ class Admission:
             generation = self.prov_bundle.wasGeneratedBy(
                 patient_out, stay_activity, transfer.outtime
             )
+
+            patient_out.wasDerivedFrom(patient_in, activity=stay_activity)
+            derived_entities[patient_in.identifier].add(patient_out.identifier)
+
 
         for procedure in self.procedures:
             proc_attrs = [
@@ -289,6 +295,8 @@ class Admission:
 
             proc_activity.used(patient_start)
             patient_end.wasGeneratedBy(proc_activity)
+            patient_end.wasDerivedFrom(patient_start, activity=proc_activity)
+            derived_entities[patient_start.identifier].add(patient_end.identifier)
             proc_activity.wasAssociatedWith(procedure.care_giver, procedure.process)
 
         # Linking up versions of the patients
@@ -296,10 +304,13 @@ class Admission:
             version for _, version in sorted(self.patient.versions.items())
         )
         if sorted_versions:  # having at least one
-            sorted_versions[0].wasDerivedFrom(self.get_patient_at_admission())
+            sorted_versions[0].specializationOf(self.get_patient_at_admission())
             if len(sorted_versions) > 1:
+                # linking consecutive versions
                 for prev, curr in zip(sorted_versions[:-1], sorted_versions[1:]):
-                    curr.wasDerivedFrom(prev)
+                    # but only if they are not already linked
+                    if (curr.identifier not in derived_entities[prev.identifier]):
+                        curr.wasDerivedFrom(prev)
 
 
 def get_blank_prov_document():
