@@ -51,7 +51,7 @@ plots: experiments
 	@venv/bin/ipython -c "%run plots.ipynb"
 
 # The following goals will be called using the dataset Makefile on the each dataset
-kernels types experiments plots clean-app-data clean-kernels clean-pickled-kernels clean-experiments: $(DATASETS)
+kernels types experiments plots clean-app-data clean-kernels clean-pickled-kernels clean-cached-experiments clean-experiments: $(DATASETS)
 
 $(DATASETS): venv data
 	@echo "--------- Execute [$(MAKECMDGOALS)] on $@ dataset ---------"
@@ -76,5 +76,5 @@ clean:
 	rm -rf outputs
 	rm -rf plots
 
-.PHONY: help data clean kernels types experiments plots clean-app-data clean-kernels clean-pickled-kernels clean-experiments save-results
+.PHONY: help data clean kernels types experiments plots clean-app-data clean-kernels clean-pickled-kernels clean-cached-experiments clean-experiments save-results
 .PHONY: $(DATASETS)

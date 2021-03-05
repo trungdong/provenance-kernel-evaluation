@@ -47,6 +47,9 @@ $(OUTPUT)/scoring.pickled: $(OUTPUT)/graphs.pickled $(PYTHON_KERNELS) $(SCALA_KE
 
 experiments: $(OUTPUT)/scoring.pickled
 
+clean-cached-experiments:
+	rm -f rm -f $(OUTPUT)/scorings/*
+
 clean-experiments:
 	rm -f $(OUTPUT)/scoring.pickled
 	rm -rf $(PLOTDIR)
