@@ -1,6 +1,7 @@
 """Common experiment code."""
 import logging
 from pathlib import Path
+import pickle
 from typing import Optional
 
 import numpy as np
@@ -103,11 +104,35 @@ def load_experiment_scorings(output_path: Path, method_id: str):
     return pd.read_pickle(scorings_filepath)
 
 
-def get_fixed_CV_sets(X, y, n_splits=10, n_repeats=10, random_state=None):
+def get_fixed_CV_sets(
+    X,
+    y,
+    n_splits: int = 10,
+    n_repeats: int = 10,
+    random_state=None,
+    output_path: Path = None,
+):
+    if output_path is not None:
+        # try loading the cached CV_sets if it exists
+        # this is to make sure performance comparison is fair across runs
+        cv_sets_filepath = output_path / "cv_sets.pickled"
+        if cv_sets_filepath.is_file():
+            print("> Loaded CV sets from: ", cv_sets_filepath)
+            with cv_sets_filepath.open("rb") as f:
+                return pickle.load(f)
+
     rskf = RepeatedStratifiedKFold(
         n_splits=n_splits, n_repeats=n_repeats, random_state=random_state
     )
-    return list(rskf.split(X, y))
+    cv_sets = list(rskf.split(X, y))
+
+    if output_path is not None:
+        # remember these sets for later runs, if any
+        cv_sets_filepath = output_path / "cv_sets.pickled"
+        with cv_sets_filepath.open("wb") as f:
+            pickle.dump(cv_sets, f)
+
+    return cv_sets
 
 
 def pd_df_to_coo(df: pd.DataFrame):
@@ -203,10 +228,10 @@ def test_prediction_on_classifiers(
 ):
     if cv_sets is None:
         cv = 10
-        print("Using 10-fold cross validation...")
+        print("> Using 10-fold cross validation...")
     else:
         cv = cv_sets
-        print(f"Using {len(cv_sets)}x preselected train/test sets...")
+        print(f"> Using {len(cv_sets)}x preselected train/test sets...")
 
     results = pd.DataFrame()
     for clf_name, clf in ML_CLASSIFIERS.items():

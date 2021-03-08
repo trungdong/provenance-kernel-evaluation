@@ -39,8 +39,10 @@ def run_experiment(dataset_id: str):
     print(f"Generating GraKeL graphs for {len(selected_graphs)} files")
     selected_graphs = build_grakel_graphs(selected_graphs, dataset_folder)
 
-    cv_sets = get_fixed_CV_sets(selected_graphs, selected_graphs.label)
-    print(f"Generated {len(cv_sets)} cross-validation train/test sets.")
+    cv_sets = get_fixed_CV_sets(
+        selected_graphs, selected_graphs.label, output_path=outputs_folder
+    )
+    print(f"> Got {len(cv_sets)} cross-validation train/test sets.")
 
     results = test_prediction_on_classifiers(
         selected_graphs[POKEMON_GO_DATA_COLUMNS],

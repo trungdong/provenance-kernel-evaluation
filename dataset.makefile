@@ -43,7 +43,7 @@ kernels: $(PYTHON_KERNELS) $(SCALA_KERNELS) $(OUTPUT)/type_counts.csv
 
 # Running all the experiments on this dataset
 $(OUTPUT)/scoring.pickled: $(OUTPUT)/graphs.pickled $(PYTHON_KERNELS) $(SCALA_KERNELS)
-	$(PYTHON) -m scripts.experiments.$(DATASET)
+	@$(PYTHON) -m scripts.experiments.$(DATASET)
 
 experiments: $(OUTPUT)/scoring.pickled
 

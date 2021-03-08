@@ -48,8 +48,10 @@ else:
 print(f"Generating GraKeL graphs for {len(selected_graphs)} files")
 selected_graphs = build_grakel_graphs(selected_graphs, dataset_folder)
 
-cv_sets = get_fixed_CV_sets(selected_graphs, selected_graphs.dead)
-print(f"Generated {len(cv_sets)} cross-validation train/test sets.")
+cv_sets = get_fixed_CV_sets(
+    selected_graphs, selected_graphs.dead, output_path=outputs_folder
+)
+print(f"> Got {len(cv_sets)} cross-validation train/test sets.")
 
 print(
     "--- Testing prediction using classic ML algorithms on provenance network metrics ---"
