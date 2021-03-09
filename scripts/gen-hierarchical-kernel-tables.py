@@ -55,7 +55,7 @@ def generate_kenerlize_commands(
             "filepath": provn_graph_filepath,
             "file_id": graph_id,
             "level0": config_path_str,
-            "level_from": 0,
+            "level_from": -5,
             "level_to": 5,
             "return_cmd_only": True,
         }
@@ -195,7 +195,7 @@ def main(dataset_folder: str, output_folder: str, to_level: int):
         tables_output_path = output_path / "kernels"
         tables_output_path.mkdir(parents=True, exist_ok=True)
         for kernel_set in ["TA", "TG"]:
-            for level in range(6):
+            for level in range(-5, 6):
                 generate_save_kernel_table(
                     tables_output_path,
                     kernels_path,

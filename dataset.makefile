@@ -20,7 +20,7 @@ clean-app-data:
 
 # Generating provenance kernels
 PYTHON_KERNELS = $(shell echo $(OUTPUT)/kernels/{F,D}{A,G}_{0..5}.pickled)
-SCALA_KERNELS = $(shell echo $(OUTPUT)/kernels/T{A,G}_{0..5}.pickled)
+SCALA_KERNELS = $(shell echo $(OUTPUT)/kernels/T{A,G}_{-5..5}.pickled)
 
 $(PYTHON_KERNELS): $(OUTPUT)/graphs.pickled
 	@echo "> Producing linear kernels for $${DATASET}..."

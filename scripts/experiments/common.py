@@ -1,4 +1,5 @@
 """Common experiment code."""
+import itertools
 import logging
 from pathlib import Path
 import pickle
@@ -165,10 +166,12 @@ def read_kernel_dataframes(
     kernel_df_filepath = output_path / "kernels" / f"{kernel_set}_{from_level}.pickled"
     kernels_df = pd.read_pickle(kernel_df_filepath)
 
+    # going up for forward kernels, down for backward kernels
+    increment = 1 if to_level > from_level else -1
     if to_level is not None:
         level = from_level
-        while level < to_level:
-            level += 1  # reading the next level
+        while level != to_level:
+            level += increment  # reading the next level
             kernel_df_filepath = (
                 output_path / "kernels" / f"{kernel_set}_{level}.pickled"
             )
@@ -276,38 +279,43 @@ def test_prediction_on_kernels(
         print(f"Using {len(cv_sets)}x preselected train/test sets...")
 
     results = pd.DataFrame()
-    # Testing the provenance kernels
-    for level in range(6):
-        for kernel_set in ["FG", "DG", "TG", "FA", "DA", "TA"]:
-            method_id = f"{kernel_set}-{level}"
+    # Enumerating the provenance kernels to be tested
+    kernels_levels = itertools.chain(
+        # Forward propagation kernels
+        itertools.product(["FG", "DG", "TG", "FA", "DA", "TA"], range(6)),
+        # Backward propagation kernels
+        itertools.product(["TG", "TA"], range(-1, -6, -1)),
+    )
+    for kernel_set, level in kernels_levels:
+        method_id = f"{kernel_set}-{level}"
 
-            # load existing scorings
-            scorings = load_experiment_scorings(output_path, method_id)
+        # load existing scorings
+        scorings = load_experiment_scorings(output_path, method_id)
 
-            if scorings is None:
-                # run the experiment
-                scores = score_accuracy_kernels(
-                    graphs,
-                    output_path,
-                    kernel_set,
-                    level,
-                    y_column=y_column,
-                    cv=cv,
-                )
-                data = {
-                    score_type: scores[score_field]
-                    for score_type, score_field in zip(scoring, score_fields)
-                }
-                data["method"] = method_id
-                timings_column_name = f"timings_{kernel_set}_{level}"
-                try:
-                    data["time"] = graphs[timings_column_name].sum()
-                except KeyError:
-                    data["time"] = 0.0
-                scorings = pd.DataFrame(data)
-                save_experiment_scorings(output_path, method_id, scorings)
+        if scorings is None:
+            # run the experiment
+            scores = score_accuracy_kernels(
+                graphs,
+                output_path,
+                kernel_set,
+                level,
+                y_column=y_column,
+                cv=cv,
+            )
+            data = {
+                score_type: scores[score_field]
+                for score_type, score_field in zip(scoring, score_fields)
+            }
+            data["method"] = method_id
+            timings_column_name = f"timings_{kernel_set}_{level}"
+            try:
+                data["time"] = graphs[timings_column_name].sum()
+            except KeyError:
+                data["time"] = 0.0
+            scorings = pd.DataFrame(data)
+            save_experiment_scorings(output_path, method_id, scorings)
 
-            results = results.append(scorings, ignore_index=True)
+        results = results.append(scorings, ignore_index=True)
 
     return results
 
