@@ -33,7 +33,8 @@ $(SCALA_KERNELS):
 	@$(PYTHON) scripts/gen-hierarchical-kernel-tables.py $(DATASET_FOLDER) $(OUTPUT)
 
 clean-kernels:
-	rm -rf $(OUTPUT)/kernels/*.pickled
+	rm -rf $(OUTPUT)/kernels
+	rm -rf $(OUTPUT)/type_counts.csv
 
 # Counting the provenance types produced by each kernels
 $(OUTPUT)/type_counts.csv: $(PYTHON_KERNELS) $(SCALA_KERNELS)
