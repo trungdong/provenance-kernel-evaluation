@@ -54,27 +54,6 @@ def run_experiment(dataset_id: str):
     print(f"Generating GraKeL graphs for {len(selected_graphs)} files")
     selected_graphs = build_grakel_graphs(selected_graphs, dataset_folder)
 
-    # ---------- Ayah's code ----------------------------------------------
-    selected_graphs_filepath = outputs_folder / f"{dataset_id}.pickled"
-    selected_graphs_filepath_2 = outputs_folder / f"{dataset_id}-Analytics.pickled"
-    index = selected_graphs.columns.get_loc(NETWORK_METRIC_NAMES[0])
-    applicationdata = selected_graphs.columns[:index]
-
-    X = selected_graphs[applicationdata]
-    y = selected_graphs.trusted
-
-    data = pd.concat([X, y], axis=1)
-    data = data.rename(columns={"trusted": "Class"})
-    data.to_pickle(selected_graphs_filepath)
-
-    X = selected_graphs[NETWORK_METRIC_NAMES]
-    y = selected_graphs.trusted
-
-    data = pd.concat([X, y], axis=1)
-    data = data.rename(columns={"trusted": "Class"})
-    data.to_pickle(selected_graphs_filepath_2)
-    # --------------------------------------------------------------------
-
     cv_sets = get_fixed_CV_sets(
         selected_graphs, selected_graphs.trusted, output_path=outputs_folder
     )
