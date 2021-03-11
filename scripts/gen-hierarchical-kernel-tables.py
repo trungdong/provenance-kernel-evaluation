@@ -3,6 +3,7 @@
 import json
 import logging
 from pathlib import Path
+import tarfile
 import tempfile
 from typing import Dict, Iterable, List
 
@@ -82,9 +83,7 @@ def load_feature_file(
     kernels_path: Path, kernel_set, graph_filename, level: int
 ) -> dict:
     graph_id = Path(graph_filename).stem  # stripped off the file extension
-    features_filepath = (
-        kernels_path / kernel_set / f"{graph_id}-{level}.features.json"
-    )
+    features_filepath = kernels_path / kernel_set / f"{graph_id}-{level}.features.json"
 
     with features_filepath.open() as f:
         dict_structure = json.load(f)
@@ -190,6 +189,13 @@ def main(dataset_folder: str, output_folder: str, to_level: int):
         )
         # call batch mode
         provman_batch(batch_commands)
+
+        # store all the output files in the temp folder into a tar archive
+        tarfile_path = output_path / "provman-features-files.tar.gz"
+        logger.debug("Saving provman's output files to: %s", tarfile_path)
+        with tarfile.open(tarfile_path, "w:gz") as tar:
+            tar.add(kernels_path / "TG", "TG")
+            tar.add(kernels_path / "TA", "TA")
 
         # generate kernel tables from feature files and save to the output path
         tables_output_path = output_path / "kernels"
