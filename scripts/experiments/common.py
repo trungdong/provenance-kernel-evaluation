@@ -142,6 +142,7 @@ method_short_names = {
     "GK-WL-OA-3": "WLO3",
     "GK-WL-OA-4": "WLO4",
     "GK-WL-OA-5": "WLO5",
+    "GK-OddSth": "ODD",
     "TG-0": "GT0",
     "TG-1": "GT+1",
     "TG-2": "GT+2",
@@ -453,6 +454,7 @@ GRAKEL_KERNELS = {
     "GK-WL-OA-5": lambda: WeisfeilerLehmanOptimalAssignment(
         n_iter=5, n_jobs=N_JOBS, normalize=NORMALIZING_GRAPH_KERNELS
     ),
+    "GK-OddSth": lambda: OddSth(normalize=NORMALIZING_GRAPH_KERNELS),
 }
 
 NOT_TESTED = {
@@ -472,7 +474,6 @@ NOT_TESTED = {
     "GK-Propagation": lambda: Propagation(normalize=NORMALIZING_GRAPH_KERNELS),
     "GK-PropagationA": lambda: PropagationAttr(normalize=NORMALIZING_GRAPH_KERNELS),
     "GK-MScLaplacian": lambda: MultiscaleLaplacian(normalize=NORMALIZING_GRAPH_KERNELS),
-    "GK-OddSth": lambda: OddSth(normalize=NORMALIZING_GRAPH_KERNELS),
     "GK-SubgraphMatching": lambda: SubgraphMatching(
         normalize=NORMALIZING_GRAPH_KERNELS
     ),  # taking too long
