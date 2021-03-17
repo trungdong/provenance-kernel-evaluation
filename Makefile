@@ -52,7 +52,6 @@ plots: experiments
 
 # The following goals will be called using the dataset Makefile on the each dataset
 kernels types experiments plots clean-app-data clean-kernels clean-pickled-kernels clean-cached-experiments clean-experiments: $(DATASETS)
-	@date
 
 $(DATASETS): venv data
 	@echo "--------- Execute [$(MAKECMDGOALS)] on $@ dataset ---------"
