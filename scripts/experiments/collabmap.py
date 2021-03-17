@@ -38,20 +38,21 @@ def run_experiment(dataset_id: str):
         # This is the first time we run this experiment
         # Balancing the dataset on the trusted attribute
         print(
-            "Current number of trusted values:\n", graphs_index.trusted.value_counts()
+            " - Current number of trusted values:\n",
+            graphs_index.trusted.value_counts(),
         )
         selected_graphs = graphs_index[graphs_index.trusted == False]
         selected_graphs = selected_graphs.append(
             graphs_index[graphs_index.trusted == True].sample(len(selected_graphs))
         )
         print(
-            "Number of trusted values in selected graphs:\n",
+            " - Number of trusted values in selected graphs:\n",
             selected_graphs.trusted.value_counts(),
         )
         # saving the list of selected graphs for later reproduction of this experiment
         selected_graphs.graph_file.to_csv(selected_samples_filepath)
 
-    print(f"Generating GraKeL graphs for {len(selected_graphs)} files")
+    print(f"> Generating GraKeL graphs for {len(selected_graphs)} files")
     selected_graphs = build_grakel_graphs(selected_graphs, dataset_folder)
 
     cv_sets = get_fixed_CV_sets(
@@ -80,5 +81,5 @@ def run_experiment(dataset_id: str):
         ignore_index=True,
     )
 
-    print("Saving scoring to:", output_filepath)
+    print("> Saving scoring to:", output_filepath)
     results.to_pickle(output_filepath)

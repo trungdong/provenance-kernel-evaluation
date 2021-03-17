@@ -320,11 +320,12 @@ def test_prediction_on_classifiers(
         scorings = load_experiment_scorings(output_path, method_id)
 
         if scorings is None:
+            print("> Testing ML method:", method_id)
             timer = Timer()
             with timer:
                 scores = cross_validate(clf, X, y, scoring=scoring, cv=cv, n_jobs=-1)
             print(
-                "Accuracy: %0.2f (+/- %0.2f) <-- %s"
+                "  - Accuracy: %0.2f (+/- %0.2f) <-- %s"
                 % (
                     scores["test_accuracy"].mean(),
                     scores["test_accuracy"].std() * 2,

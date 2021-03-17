@@ -31,12 +31,13 @@ def run_experiment(dataset_id: str):
 
     # This dataset is balanced and does not need balancing
     print(
-        "Current number of players in each team:\n", graphs_index.label.value_counts()
+        "  - Current number of players in each team:\n",
+        graphs_index.label.value_counts(),
     )
     selected_graphs = graphs_index
     selected_graphs.graph_file.to_csv(selected_samples_filepath)
 
-    print(f"Generating GraKeL graphs for {len(selected_graphs)} files")
+    print(f"> Generating GraKeL graphs for {len(selected_graphs)} files")
     selected_graphs = build_grakel_graphs(selected_graphs, dataset_folder)
 
     cv_sets = get_fixed_CV_sets(
@@ -77,5 +78,5 @@ def run_experiment(dataset_id: str):
         ignore_index=True,
     )
 
-    print("Saving scoring to:", output_filepath)
+    print("> Saving scoring to:", output_filepath)
     results.to_pickle(output_filepath)
