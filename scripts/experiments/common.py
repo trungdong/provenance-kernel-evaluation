@@ -63,7 +63,7 @@ logger = logging.getLogger(__name__)
 # no parallel for graph kernels to measure time costs
 N_JOBS = None  # type: Optional[int]
 NORMALIZING_GRAPH_KERNELS = True
-TIMEOUT = 15 * 60  # 15 mins in seconds
+TIMEOUT = 60 * 60  # one hour in seconds
 SVM_C_PARAMS = [0.0001, 0.001, 0.01, 0.1, 1.0, 10.0, 100.0, 1000.0]
 
 ML_CLASSIFIERS = {
