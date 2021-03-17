@@ -509,7 +509,7 @@ def test_prediction_on_Grakel_kernels(
             logger.info("Testing graph kernel: %s", method_id)
             print("> Testing GraKeL kernel:", method_id)
             gk = gk_class()
-            has_timed_out = False
+            failed = False
             try:
                 timer = Timer(timeout=TIMEOUT)
                 with timer:
@@ -517,10 +517,13 @@ def test_prediction_on_Grakel_kernels(
                     # only time the kerneling cost
                     X = gk.fit_transform(graphs.grakel_graphs)
             except TimeoutException:
-                has_timed_out = True
+                failed = True
                 print("*** TIMED OUT - %s ***" % method_id)
+            except Exception as e:
+                failed = True
+                print(f"*** EXCEPTION - {method_id} ***\n{e}")
 
-            if has_timed_out:
+            if failed:
                 # skip this, go to the next experiment
                 continue
 
