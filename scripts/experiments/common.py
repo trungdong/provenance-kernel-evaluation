@@ -275,7 +275,6 @@ def score_accuracy_kernels(
     # filtering the kernels to only selected graphs
     selected_kernels = kernels_df.loc[graphs.graph_file]
 
-    print(f"  - Calculating accuracy scores with SVM...")
     # Converting the selected kernels into a sparse matrix
     X = pd_df_to_coo(selected_kernels)
     if including_edge_type_counts:
@@ -298,7 +297,7 @@ def score_accuracy_kernels(
     )
     scores = cross_validate(gs, X, graphs[y_column], scoring=scoring, cv=cv, n_jobs=-1)
     print(
-        "    Accuracy: %0.2f (+/- %0.2f)"
+        "  - Accuracy: %0.2f (+/- %0.2f)"
         % (scores["test_accuracy"].mean(), scores["test_accuracy"].std() * 2)
     )
     return scores
@@ -351,10 +350,10 @@ def test_prediction_on_kernels(
 ):
     if cv_sets is None:
         cv = 10
-        print("Using 10-fold cross validation...")
+        print("> Using 10-fold cross validation...")
     else:
         cv = cv_sets
-        print(f"Using {len(cv_sets)}x preselected train/test sets...")
+        print(f"> Using {len(cv_sets)}x preselected train/test sets...")
 
     results = pd.DataFrame()
     # Enumerating the provenance kernels to be tested
@@ -489,10 +488,10 @@ def test_prediction_on_Grakel_kernels(
 ):
     if cv_sets is None:
         cv = 10
-        print("Using 10-fold cross validation...")
+        print("> Using 10-fold cross validation...")
     else:
         cv = cv_sets
-        print(f"Using {len(cv_sets)}x preselected train/test sets...")
+        print(f"> Using {len(cv_sets)}x preselected train/test sets...")
     if ignore_kernels is None:
         ignore_kernels = set()
     results = pd.DataFrame()
@@ -507,7 +506,7 @@ def test_prediction_on_Grakel_kernels(
         if scorings is None:
             # run the experiment
             logger.info("Testing graph kernel: %s", method_id)
-            print("Testing GraKeL kernel:", method_id)
+            print("> Testing GraKeL kernel:", method_id)
             gk = gk_class()
             has_timed_out = False
             try:
@@ -535,7 +534,7 @@ def test_prediction_on_Grakel_kernels(
                 gs, X, graphs[y_column], scoring=scoring, cv=cv, n_jobs=-1
             )
             print(
-                "Accuracy: %0.2f (+/- %0.2f) <-- %s"
+                "  - Accuracy: %0.2f (+/- %0.2f) <-- %s"
                 % (
                     scores["test_accuracy"].mean(),
                     scores["test_accuracy"].std() * 2,
