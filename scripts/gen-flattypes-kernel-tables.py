@@ -1,5 +1,6 @@
 """Generate feature vectors from flat provenance types for a set of graphs from level 0 to 5."""
 
+from collections import Counter
 import logging
 from pathlib import Path
 from typing import Collection, Dict, Iterable, List, Tuple
@@ -9,7 +10,11 @@ from scipy.sparse import csr_matrix
 
 from prov.model import ProvDocument
 
-from flatprovenancetypes import calculate_flat_provenance_types, count_fp_types
+from flatprovenancetypes import (
+    FlatProvenanceType,
+    calculate_flat_provenance_types,
+    print_flat_type,
+)
 from utils import Timer
 
 import click
@@ -24,7 +29,7 @@ def count_flatprovenancetypes_for_graphs(
     level: int,
     including_primitives_types: bool,
     counting_wdf_as_two: bool = False,
-) -> Tuple[List[Dict[int, Dict[str, int]]], List[List[float]]]:
+) -> Tuple[List[Dict[int, Dict[FlatProvenanceType, int]]], List[List[float]]]:
     logger.debug(
         "Producing linear provenance types up to level %s "
         "(with application types: %s, counting derivations as 2-length edges: %s) "
@@ -34,13 +39,13 @@ def count_flatprovenancetypes_for_graphs(
         counting_wdf_as_two,
         len(graph_filenames),
     )
-    results = []  # type: List[Dict[int, Dict[str, int]]]
+    results = []  # type: List[Dict[int, Dict[FlatProvenanceType, int]]]
     timings = []  # type: List[List[float]]
     for graph_filename in graph_filenames:
         filepath = dataset_path / graph_filename
         prov_doc = ProvDocument.deserialize(filepath)
         durations = []  # type: List[float]
-        features = dict()  # type: Dict[int, Dict[str, int]]
+        features = dict()  # type: Dict[int, Dict[FlatProvenanceType, int]]
         for h in range(level + 1):
             timer = Timer(verbose=False)
             with timer:
@@ -48,7 +53,7 @@ def count_flatprovenancetypes_for_graphs(
                     prov_doc, h, including_primitives_types, counting_wdf_as_two
                 )
             # counting only the last level
-            features[h] = count_fp_types(fp_types[h].values())
+            features[h] = Counter(fp_types[h].values())
             durations.append(timer.interval)
         results.append(features)
         timings.append(durations)
@@ -56,7 +61,7 @@ def count_flatprovenancetypes_for_graphs(
 
 
 def save_single_level_table(
-    feature_list: List[Dict[str, int]],
+    feature_list: List[Dict[FlatProvenanceType, int]],
     index: Iterable[str],
     output_path: Path,
     kernel_set: str,
@@ -68,8 +73,9 @@ def save_single_level_table(
     indptr = [0]  # type: List[int]
     indices = []  # type: List[int]
     data = []  # type: List[int]
-    vocabulary = dict()  # type: Dict[str, int]
+    vocabulary = dict()  # type: Dict[FlatProvenanceType, int]
 
+    # Constructing a sparse matrix to store the counts of each FlatProvenanceType
     for feature in feature_list:
         for prov_type, count in feature.items():
             idx = vocabulary.setdefault(prov_type, len(vocabulary))
@@ -89,6 +95,8 @@ def save_single_level_table(
     # prefixing the feature name with the kernel type and level
     kernel_id = kernel_set + str(level)
     prov_types_df["Number"] = prov_types_df.Number.map(lambda n: f"{kernel_id}_{n}")
+    # converting FlatProvenanceType to a pretty-formatted string
+    prov_types_df["Type"] = prov_types_df.Type.map(print_flat_type)
 
     filepath = output_path / "kernels" / f"{kernel_set}_{level}_types.csv"
     logger.debug("- Writing type mappings to: %s", filepath)
@@ -104,7 +112,7 @@ def save_single_level_table(
 
 
 def save_feature_tables(
-    fpt_counter_list: List[Dict[int, Dict[str, int]]],
+    fpt_counter_list: List[Dict[int, Dict[FlatProvenanceType, int]]],
     index: Iterable[str],
     output_path: Path,
     kernel_set: str,
