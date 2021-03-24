@@ -3,6 +3,7 @@
 from collections import Counter
 import logging
 from pathlib import Path
+import pickle
 from typing import Collection, Dict, Iterable, List, Tuple
 
 import pandas as pd
@@ -95,11 +96,22 @@ def save_single_level_table(
     # prefixing the feature name with the kernel type and level
     kernel_id = kernel_set + str(level)
     prov_types_df["Number"] = prov_types_df.Number.map(lambda n: f"{kernel_id}_{n}")
+
+    # storing a mapping between a type's name and its definition
+    types_map = {
+        row.Number: row.Type
+        for row in prov_types_df.itertuples()
+    }
+    filepath = output_path / "kernels" / f"{kernel_set}_{level}_types_map.pickled"
+    with filepath.open("wb") as f:
+        logger.debug("- Writing type mappings to: %s", filepath)
+        pickle.dump(types_map, f)
+
     # converting FlatProvenanceType to a pretty-formatted string
     prov_types_df["Type"] = prov_types_df.Type.map(print_flat_type)
 
     filepath = output_path / "kernels" / f"{kernel_set}_{level}_types.csv"
-    logger.debug("- Writing type mappings to: %s", filepath)
+    logger.debug("- Writing humand-readable type definitions to: %s", filepath)
     prov_types_df.to_csv(filepath, index=False)
 
     prov_type_features = pd.DataFrame.sparse.from_spmatrix(
