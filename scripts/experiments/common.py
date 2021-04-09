@@ -242,6 +242,7 @@ def read_kernel_dataframes(
     output_path: Path, kernel_set: str, from_level: int = 0, to_level: int = None
 ) -> pd.DataFrame:
     kernel_df_filepath = output_path / "kernels" / f"{kernel_set}_{from_level}.pickled"
+    logger.debug("Reading pickled dataframe: %s", kernel_df_filepath)
     kernels_df = pd.read_pickle(kernel_df_filepath)
 
     # going up for forward kernels, down for backward kernels
@@ -260,16 +261,14 @@ def read_kernel_dataframes(
     return kernels_df
 
 
-def score_accuracy_kernels(
+def load_kernel_ml_data(
     graphs: pd.DataFrame,
     output_path: Path,
-    kernel_set: str = "summary",
+    kernel_set: str,
     level: int = 0,
     y_column: str = "label",
-    cv: int = 10,
     including_edge_type_counts: bool = False,
 ):
-    print(f"> Testing {kernel_set} up to level-{level}:")
     print("  - Reading kernels...")
     kernels_df = read_kernel_dataframes(output_path, kernel_set, to_level=level)
     # filtering the kernels to only selected graphs
@@ -281,8 +280,26 @@ def score_accuracy_kernels(
         # putting the counts of PROV relation types (edge types) together with the kernels
         edge_type_features = coo_matrix(graphs[PROV_RELATION_NAMES])
         X = hstack([edge_type_features, X])
+
     # SVM works best with sparse CSR format and float64 dtype
     X = X.tocsr()
+    y = graphs[y_column]
+    return X, y
+
+
+def score_accuracy_kernels(
+    graphs: pd.DataFrame,
+    output_path: Path,
+    kernel_set: str = "summary",
+    level: int = 0,
+    y_column: str = "label",
+    cv: int = 10,
+    including_edge_type_counts: bool = False,
+):
+    print(f"> Testing {kernel_set} up to level-{level}:")
+    X, y = load_kernel_ml_data(
+        graphs, output_path, kernel_set, level, y_column, including_edge_type_counts
+    )
     clf = Pipeline(
         [
             ("scale", StandardScaler(with_mean=False)),
@@ -295,7 +312,7 @@ def score_accuracy_kernels(
             "svm__C": SVM_C_PARAMS,
         },
     )
-    scores = cross_validate(gs, X, graphs[y_column], scoring=scoring, cv=cv, n_jobs=-1)
+    scores = cross_validate(gs, X, y, scoring=scoring, cv=cv, n_jobs=-1)
     print(
         "  - Accuracy: %0.2f (+/- %0.2f)"
         % (scores["test_accuracy"].mean(), scores["test_accuracy"].std() * 2)
