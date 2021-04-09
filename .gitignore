@@ -19,4 +19,5 @@ venv/
 datasets/*
 outputs/*
 plots/*
+results
 .DS_Store
