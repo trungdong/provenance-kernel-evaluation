@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# PyCharm configuration folder
+.idea
+
 # Python local enviroment
 venv/
 
