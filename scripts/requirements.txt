@@ -4,7 +4,7 @@ scipy
 pandas
 matplotlib
 seaborn
-jupyter
+jupyterlab
 
 # Provenance
 prov[dot]
