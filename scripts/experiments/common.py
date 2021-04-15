@@ -53,7 +53,7 @@ from sklearn.metrics import (
     make_scorer,
 )
 
-from scipy.sparse import coo_matrix, hstack
+from scipy.sparse import coo_matrix
 
 from scripts.data.common import PROV_RELATION_NAMES
 from scripts.utils import Timer, TimeoutException
@@ -268,21 +268,24 @@ def load_kernel_ml_data(
     level: int = 0,
     y_column: str = "label",
     including_edge_type_counts: bool = False,
+    sparse: bool = True,
 ):
     print("  - Reading kernels...")
     kernels_df = read_kernel_dataframes(output_path, kernel_set, to_level=level)
     # filtering the kernels to only selected graphs
     selected_kernels = kernels_df.loc[graphs.graph_file]
 
-    # Converting the selected kernels into a sparse matrix
-    X = pd_df_to_coo(selected_kernels)
+    X = selected_kernels
     if including_edge_type_counts:
         # putting the counts of PROV relation types (edge types) together with the kernels
-        edge_type_features = coo_matrix(graphs[PROV_RELATION_NAMES])
-        X = hstack([edge_type_features, X])
+        X = X.join(graphs[PROV_RELATION_NAMES])
 
-    # SVM works best with sparse CSR format and float64 dtype
-    X = X.tocsr()
+    if sparse:
+        # Converting the selected kernels into a sparse matrix
+        X = pd_df_to_coo(X)
+        # SVM works best with sparse CSR format and float64 dtype
+        X = X.tocsr()
+
     y = graphs[y_column]
     return X, y
 
