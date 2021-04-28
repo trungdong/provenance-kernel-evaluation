@@ -64,6 +64,8 @@ $(PLOTDIR)/type_counts.pdf: $(OUTPUT)/type_counts.csv
 
 plots: $(OUTPUT)/scoring.pickled $(PLOTDIR)/type_counts.pdf
 	$(PYTHON) scripts/plotting/$(DATASET).py
+	$(PYTHON) -m scripts.plotting.type_stats $(OUTPUT) $(PLOTDIR) FA
+	$(PYTHON) -m scripts.plotting.type_stats $(OUTPUT) $(PLOTDIR) FG
 
 
 .PHONY: kernels experiments plots clean-app-data clean-kernels clean-experiments
