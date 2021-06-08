@@ -1,10 +1,11 @@
 """Generate feature vectors from flat provenance types for a set of graphs from level 0 to 5."""
 
 from collections import Counter
+import json
 import logging
 from pathlib import Path
 import pickle
-from typing import Collection, Dict, Iterable, List, Tuple
+from typing import Collection, Dict, Iterable, List, Tuple, FrozenSet
 
 import pandas as pd
 from scipy.sparse import csr_matrix
@@ -15,6 +16,7 @@ from flatprovenancetypes import (
     FlatProvenanceType,
     calculate_flat_provenance_types,
     print_flat_type,
+    ϕ,
 )
 from utils import Timer
 
@@ -22,6 +24,7 @@ import click
 
 
 logger = logging.getLogger(__name__)
+ROOT_DIR = Path(__file__).parents[1]
 
 
 def count_flatprovenancetypes_for_graphs(
@@ -30,6 +33,7 @@ def count_flatprovenancetypes_for_graphs(
     level: int,
     including_primitives_types: bool,
     counting_wdf_as_two: bool = False,
+    ignored_types: frozenset[str] = ϕ,
 ) -> Tuple[List[Dict[int, Dict[FlatProvenanceType, int]]], List[List[float]]]:
     logger.debug(
         "Producing linear provenance types up to level %s "
@@ -51,7 +55,11 @@ def count_flatprovenancetypes_for_graphs(
             timer = Timer(verbose=False)
             with timer:
                 fp_types = calculate_flat_provenance_types(
-                    prov_doc, h, including_primitives_types, counting_wdf_as_two
+                    prov_doc,
+                    h,
+                    including_primitives_types,
+                    counting_wdf_as_two,
+                    ignored_types=ignored_types,
                 )
             # counting only the last level
             features[h] = Counter(fp_types[h].values())
@@ -98,10 +106,7 @@ def save_single_level_table(
     prov_types_df["Number"] = prov_types_df.Number.map(lambda n: f"{kernel_id}_{n}")
 
     # storing a mapping between a type's name and its definition
-    types_map = {
-        row.Number: row.Type
-        for row in prov_types_df.itertuples()
-    }
+    types_map = {row.Number: row.Type for row in prov_types_df.itertuples()}
     filepath = output_path / "kernels" / f"{kernel_set}_{level}_types_map.pickled"
     with filepath.open("wb") as f:
         logger.debug("- Writing type mappings to: %s", filepath)
@@ -143,6 +148,17 @@ def save_feature_tables(
         )
 
 
+def read_ignored_types(config_path: Path) -> FrozenSet[str]:
+    with config_path.open() as f:
+        configs: dict = json.load(f)
+
+        if "ignore" in configs:
+            ignored_type_uri_list = configs["ignore"]
+            return frozenset(ignored_type_uri_list)
+
+    return ϕ
+
+
 @click.command()
 @click.argument("dataset_folder", type=click.Path(exists=True, file_okay=False))
 @click.argument("output_folder", type=click.Path(exists=True, file_okay=False))
@@ -151,6 +167,17 @@ def main(dataset_folder: str, output_folder: str, to_level: int):
     logger.debug("Working in folder: %s", dataset_folder)
     dataset_path = Path(dataset_folder)
     output_path = Path(output_folder)
+
+    dataset = dataset_path.stem
+    config_folder = ROOT_DIR / "configs" / "provman"
+    config_path = config_folder / f"kernelize-{dataset}.json"
+    config_path_str = str(config_path) if config_path.exists() else None
+
+    ignored_types: frozenset[str] = ϕ
+    if config_path_str is not None:
+        logger.debug("Using config file: %s", config_path_str)
+        ignored_types = read_ignored_types(config_path)
+        logger.debug("- Types to be ignored: %s", ignored_types)
 
     graph_index_filepath = output_path / "graphs.pickled"
     if not graph_index_filepath.exists():
@@ -211,6 +238,7 @@ def main(dataset_folder: str, output_folder: str, to_level: int):
         level=to_level,
         including_primitives_types=True,
         counting_wdf_as_two=False,
+        ignored_types=ignored_types,
     )
     save_feature_tables(
         fpt_count_list,
@@ -233,6 +261,7 @@ def main(dataset_folder: str, output_folder: str, to_level: int):
         level=to_level,
         including_primitives_types=True,
         counting_wdf_as_two=True,
+        ignored_types=ignored_types,
     )
     save_feature_tables(
         fpt_count_list,

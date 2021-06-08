@@ -3,7 +3,8 @@
   "mapper": {
   },
   "ignore": [
-    "https://openprovenance.org/ns/mimic#Discharged"
+    "https://openprovenance.org/ns/mimic#Discharged",
+    "https://openprovenance.org/ns/mimic#DischargedPatient"
   ],
   "properties": [
   ]

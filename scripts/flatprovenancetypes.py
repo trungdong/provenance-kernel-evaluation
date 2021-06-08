@@ -45,18 +45,25 @@ SHORT_NAMES = {
     PROV_MEMBERSHIP: "mem",
 }
 
+ϕ: FrozenSet = frozenset()  # define an empty set constant
 Fingerprint = FrozenSet[QualifiedName]
 FlatProvenanceType = Tuple[Fingerprint, ...]
 MultiLevelTypeDict = Dict[int, Dict[QualifiedName, FlatProvenanceType]]
 
 
 def get_element_types(
-    element: ProvElement, including_additional_types: bool = True
+    element: ProvElement,
+    including_additional_types: bool = True,
+    types_to_ignore: FrozenSet[str] = ϕ,
 ) -> Set[QualifiedName]:
     types = {element.get_type()}
     if including_additional_types:
         types.update(
-            {t for t in element.get_asserted_types() if isinstance(t, QualifiedName)}
+            {
+                t
+                for t in element.get_asserted_types()
+                if isinstance(t, QualifiedName) and t.uri not in types_to_ignore
+            }
         )
     return types
 
@@ -97,6 +104,7 @@ def calculate_flat_provenance_types(
     to_level: int = 0,
     including_primitives_types: bool = True,
     counting_wdf_as_two: bool = False,
+    ignored_types: Iterable[str] = ϕ,
 ) -> MultiLevelTypeDict:
     # flatten all the bundles, if any
     prov_doc = prov_doc.flattened()
@@ -107,11 +115,13 @@ def calculate_flat_provenance_types(
         set
     )  # type: Dict[QualifiedName, Set[Tuple[QualifiedName, QualifiedName]]]
 
+    types_to_ignore: FrozenSet[str] = frozenset(ignored_types)
+
     # indexing node types and relations
     for rec in prov_doc.get_records():  # type: ProvRecord
         if rec.is_element():
             level0_types[rec.identifier] |= get_element_types(
-                rec, including_primitives_types
+                rec, including_primitives_types, types_to_ignore
             )
         elif rec.is_relation():
             rel_type = rec.get_type()
