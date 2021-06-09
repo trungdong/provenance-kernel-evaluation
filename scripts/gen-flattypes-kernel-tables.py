@@ -33,7 +33,7 @@ def count_flatprovenancetypes_for_graphs(
     level: int,
     including_primitives_types: bool,
     counting_wdf_as_two: bool = False,
-    ignored_types: frozenset[str] = ϕ,
+    ignored_types: FrozenSet[str] = ϕ,
 ) -> Tuple[List[Dict[int, Dict[FlatProvenanceType, int]]], List[List[float]]]:
     logger.debug(
         "Producing linear provenance types up to level %s "
@@ -173,7 +173,7 @@ def main(dataset_folder: str, output_folder: str, to_level: int):
     config_path = config_folder / f"kernelize-{dataset}.json"
     config_path_str = str(config_path) if config_path.exists() else None
 
-    ignored_types: frozenset[str] = ϕ
+    ignored_types: FrozenSet[str] = ϕ
     if config_path_str is not None:
         logger.debug("Using config file: %s", config_path_str)
         ignored_types = read_ignored_types(config_path)
