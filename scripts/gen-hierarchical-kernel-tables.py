@@ -30,6 +30,10 @@ def generate_kenerlize_commands(
         logger.debug("Using config file: %s", config_path_str)
 
     # paths for variations of kernels and create them
+    HA_kernels_path = output_path / "HA"
+    HA_kernels_path.mkdir(parents=True, exist_ok=True)
+    HG_kernels_path = output_path / "HG"
+    HG_kernels_path.mkdir(parents=True, exist_ok=True)
     TA_kernels_path = output_path / "TA"
     TA_kernels_path.mkdir(parents=True, exist_ok=True)
     TG_kernels_path = output_path / "TG"
@@ -60,6 +64,23 @@ def generate_kenerlize_commands(
             "level_to": 5,
             "return_cmd_only": True,
         }
+
+        # generating the hierarchical types WITHOUT WdfT transformations
+        cmd_line = "provmanagement " + provman_kernelize(
+            outpath=HA_kernels_path,
+            triangle=False,
+            **kernelize_common_args,
+        )
+        command_lines.append(cmd_line)
+        # generating the hierarchical types WITHOUT WdfT transformations using no application types
+        cmd_line = "provmanagement " + provman_kernelize(
+            outpath=HG_kernels_path,
+            no_primitives=True,
+            triangle=False,
+            **kernelize_common_args,
+        )
+        command_lines.append(cmd_line)
+
         # generating the hierarchical types with WdfT transformations
         cmd_line = "provmanagement " + provman_kernelize(
             outpath=TA_kernels_path,

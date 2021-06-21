@@ -143,6 +143,28 @@ method_short_names = {
     "GK-WL-OA-4": "WLO4",
     "GK-WL-OA-5": "WLO5",
     "GK-OddSth": "ODD",
+    "HG-0": "GH0",
+    "HG-1": "GH+1",
+    "HG-2": "GH+2",
+    "HG-3": "GH+3",
+    "HG-4": "GH+4",
+    "HG-5": "GH+5",
+    "HG--1": "GH-1",
+    "HG--2": "GH-2",
+    "HG--3": "GH-3",
+    "HG--4": "GH-4",
+    "HG--5": "GH-5",
+    "HA-0": "AH0",
+    "HA-1": "AH+1",
+    "HA-2": "AH+2",
+    "HA-3": "AH+3",
+    "HA-4": "AH+4",
+    "HA-5": "AH+5",
+    "HA--1": "AH-1",
+    "HA--2": "AH-2",
+    "HA--3": "AH-3",
+    "HA--4": "AH-4",
+    "HA--5": "AH-5",
     "TG-0": "GT0",
     "TG-1": "GT+1",
     "TG-2": "GT+2",
@@ -380,9 +402,9 @@ def test_prediction_on_kernels(
     # Enumerating the provenance kernels to be tested
     kernels_levels = itertools.chain(
         # Forward propagation kernels
-        itertools.product(["FG", "DG", "TG", "FA", "DA", "TA"], range(6)),
+        itertools.product(["FG", "DG", "HG", "TG", "FA", "DA", "HA", "TA"], range(6)),
         # Backward propagation kernels
-        itertools.product(["TG", "TA"], range(-1, -6, -1)),
+        itertools.product(["HG", "HA", "TG", "TA"], range(-1, -6, -1)),
     )
     for kernel_set, level in kernels_levels:
         method_id = f"{kernel_set}-{level}"
