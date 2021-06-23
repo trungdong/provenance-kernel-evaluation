@@ -215,13 +215,15 @@ def main(dataset_folder: str, output_folder: str, to_level: int):
         tarfile_path = output_path / "provman-features-files.tar.gz"
         logger.debug("Saving provman's output files to: %s", tarfile_path)
         with tarfile.open(tarfile_path, "w:gz") as tar:
+            tar.add(kernels_path / "HG", "HG")
+            tar.add(kernels_path / "HA", "HA")
             tar.add(kernels_path / "TG", "TG")
             tar.add(kernels_path / "TA", "TA")
-
+            
         # generate kernel tables from feature files and save to the output path
         tables_output_path = output_path / "kernels"
         tables_output_path.mkdir(parents=True, exist_ok=True)
-        for kernel_set in ["TA", "TG"]:
+        for kernel_set in ["HG", "HA", "TG", "TA"]:
             for level in range(-5, 6):
                 generate_save_kernel_table(
                     tables_output_path,
