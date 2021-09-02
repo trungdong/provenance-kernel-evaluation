@@ -400,12 +400,7 @@ def test_prediction_on_kernels(
 
     results = pd.DataFrame()
     # Enumerating the provenance kernels to be tested
-    kernels_levels = itertools.chain(
-        # Forward propagation kernels
-        itertools.product(["FG", "DG", "HG", "TG", "FA", "DA", "HA", "TA"], range(6)),
-        # Backward propagation kernels
-        itertools.product(["HG", "HA", "TG", "TA"], range(-1, -6, -1)),
-    )
+    kernels_levels = itertools.product(["FG", "FA"], range(6))
     for kernel_set, level in kernels_levels:
         method_id = f"{kernel_set}-{level}"
 
