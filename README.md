@@ -47,3 +47,6 @@ its players choose a Pokémon to **target** and to **dispose of** when they need
 ## Licence
 
 A licence is to be determined. All rights reserved.
+
+## Acknowledgement
+This work is supported by a Department of Navy award (Award No. N62909-18-1-2079) issued by the Office of Naval Research.
