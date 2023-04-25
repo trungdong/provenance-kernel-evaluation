@@ -34,9 +34,12 @@ else:
     # This is the first time we run this experiment
     # Selecting relevant graphs and balancing the dataset
     print(" - Current number of dead values:\n", graphs_index.dead.value_counts())
-    selected_graphs = graphs_index[graphs_index.dead == True]
-    selected_graphs = selected_graphs.append(
-        graphs_index[graphs_index.dead == False].sample(len(selected_graphs))
+    graphs_with_true_labels = graphs_index[graphs_index.dead == True]
+    selected_graphs = pd.concat(
+        [
+            graphs_with_true_labels,
+            graphs_index[graphs_index.dead == False].sample(len(graphs_with_true_labels))
+        ]
     )
     print(
         " - Number of dead values in selected graphs:\n",
@@ -53,24 +56,24 @@ cv_sets = get_fixed_CV_sets(
 )
 print(f"> Got {len(cv_sets)} cross-validation train/test sets.")
 
-results = test_prediction_on_classifiers(
+scoring_pna = test_prediction_on_classifiers(
     selected_graphs[NETWORK_METRIC_NAMES],
     outputs_folder,
     selected_graphs.dead,
     cv_sets,
     test_prefix="PNA-",
 )
-results["time"] = selected_graphs.timings_PNA.sum()
+scoring_pna["time"] = selected_graphs.timings_PNA.sum()
 
-results = results.append(
+scorings = [scoring_pna]
+scorings.append(
     test_prediction_on_Grakel_kernels(selected_graphs, outputs_folder, "dead", cv_sets),
-    ignore_index=True,
 )
 
-results = results.append(
+scorings.append(
     test_prediction_on_kernels(selected_graphs, outputs_folder, "dead", cv_sets),
-    ignore_index=True,
 )
 
 print("> Saving scoring to:", output_filepath)
+results = pd.concat(scorings, ignore_index=True)
 results.to_pickle(output_filepath)

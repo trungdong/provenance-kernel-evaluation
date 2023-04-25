@@ -5,8 +5,9 @@ We're using the common experiment code from this module.
 """
 from pathlib import Path
 
+import pandas as pd
+
 from scripts.data.common import NETWORK_METRIC_NAMES
-from scripts.data.pokemongo import POKEMON_GO_DATA_COLUMNS
 from scripts.graphkernels import build_grakel_graphs
 from .common import (
     get_fixed_CV_sets,
@@ -45,38 +46,30 @@ def run_experiment(dataset_id: str):
     )
     print(f"> Got {len(cv_sets)} cross-validation train/test sets.")
 
-    results = test_prediction_on_classifiers(
-        selected_graphs[POKEMON_GO_DATA_COLUMNS],
-        outputs_folder,
-        selected_graphs.label,
-        cv_sets,
-    )
-
-    pna_results = test_prediction_on_classifiers(
+    scoring_pna = test_prediction_on_classifiers(
         selected_graphs[NETWORK_METRIC_NAMES],
         outputs_folder,
         selected_graphs.label,
         cv_sets,
         test_prefix="PNA-",
     )
-    pna_results["time"] = selected_graphs.timings_PNA.sum()
-    results = results.append(pna_results, ignore_index=True)
+    scoring_pna["time"] = selected_graphs.timings_PNA.sum()
 
-    results = results.append(
+    scorings = [scoring_pna]
+    scorings.append(
         test_prediction_on_Grakel_kernels(
             selected_graphs,
             outputs_folder,
             "label",
             cv_sets,
             ignore_kernels={"GK-GSamp"},
-        ),
-        ignore_index=True,
+        )
     )
 
-    results = results.append(
-        test_prediction_on_kernels(selected_graphs, outputs_folder, "label", cv_sets),
-        ignore_index=True,
+    scorings.append(
+        test_prediction_on_kernels(selected_graphs, outputs_folder, "label", cv_sets)
     )
 
     print("> Saving scoring to:", output_filepath)
+    results = pd.concat(scorings, ignore_index=True)
     results.to_pickle(output_filepath)

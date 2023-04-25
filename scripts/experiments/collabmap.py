@@ -41,9 +41,12 @@ def run_experiment(dataset_id: str):
             " - Current number of trusted values:\n",
             graphs_index.trusted.value_counts(),
         )
-        selected_graphs = graphs_index[graphs_index.trusted == False]
-        selected_graphs = selected_graphs.append(
-            graphs_index[graphs_index.trusted == True].sample(len(selected_graphs))
+        graphs_untrusted = graphs_index[graphs_index.trusted == False]
+        selected_graphs = pd.concat(
+            [
+                graphs_untrusted,
+                graphs_index[graphs_index.trusted == True].sample(len(graphs_untrusted))
+            ]
         )
         print(
             " - Number of trusted values in selected graphs:\n",
@@ -60,26 +63,27 @@ def run_experiment(dataset_id: str):
     )
     print(f"> Got {len(cv_sets)} cross-validation train/test sets.")
 
-    results = test_prediction_on_classifiers(
+    scoring_pna = test_prediction_on_classifiers(
         selected_graphs[NETWORK_METRIC_NAMES],
         outputs_folder,
         selected_graphs.trusted,
         cv_sets,
         test_prefix="PNA-",
     )
-    results["time"] = selected_graphs.timings_PNA.sum()
+    scoring_pna["time"] = selected_graphs.timings_PNA.sum()
 
-    results = results.append(
+    scorings = [scoring_pna]
+    scorings.append(
         test_prediction_on_Grakel_kernels(
-            selected_graphs, outputs_folder, "trusted", cv_sets
-        ),
-        ignore_index=True,
+            selected_graphs, outputs_folder, "trusted", cv_sets,
+            ignore_kernels={"GK-GSamp"}  # TODO: investigate why this fails on CM-Buildings
+        )
     )
 
-    results = results.append(
-        test_prediction_on_kernels(selected_graphs, outputs_folder, "trusted", cv_sets),
-        ignore_index=True,
+    scorings.append(
+        test_prediction_on_kernels(selected_graphs, outputs_folder, "trusted", cv_sets)
     )
 
     print("> Saving scoring to:", output_filepath)
+    results = pd.concat(scorings, ignore_index=True)
     results.to_pickle(output_filepath)

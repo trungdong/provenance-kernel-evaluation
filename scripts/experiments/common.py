@@ -355,7 +355,7 @@ def test_prediction_on_classifiers(
         cv = cv_sets
         print(f"> Using {len(cv_sets)}x preselected train/test sets...")
 
-    results = pd.DataFrame()
+    results = []
     for clf_name, clf in ML_CLASSIFIERS.items():
         method_id = clf_name if test_prefix is None else test_prefix + clf_name
         # load existing scorings
@@ -383,9 +383,9 @@ def test_prediction_on_classifiers(
             scorings = pd.DataFrame(data)
             save_experiment_scorings(output_path, method_id, scorings)
 
-        results = results.append(scorings, ignore_index=True)
+        results.append(scorings)
 
-    return results
+    return pd.concat(results, ignore_index=True)
 
 
 def test_prediction_on_kernels(
@@ -398,7 +398,7 @@ def test_prediction_on_kernels(
         cv = cv_sets
         print(f"> Using {len(cv_sets)}x preselected train/test sets...")
 
-    results = pd.DataFrame()
+    results = []
     # Enumerating the provenance kernels to be tested
     kernels_levels = itertools.product(["FG", "FA"], range(6))
     for kernel_set, level in kernels_levels:
@@ -430,9 +430,9 @@ def test_prediction_on_kernels(
             scorings = pd.DataFrame(data)
             save_experiment_scorings(output_path, method_id, scorings)
 
-        results = results.append(scorings, ignore_index=True)
+        results.append(scorings)
 
-    return results
+    return pd.concat(results, ignore_index=True)
 
 
 GRAKEL_KERNELS = {
@@ -532,7 +532,7 @@ def test_prediction_on_Grakel_kernels(
         print(f"> Using {len(cv_sets)}x preselected train/test sets...")
     if ignore_kernels is None:
         ignore_kernels = set()
-    results = pd.DataFrame()
+    results = []
     for method_id, gk_class in GRAKEL_KERNELS.items():
         if method_id in ignore_kernels:
             logger.info("Skipping testing kernel: %s", method_id)
@@ -591,5 +591,5 @@ def test_prediction_on_Grakel_kernels(
             scorings = pd.DataFrame(data)
             save_experiment_scorings(output_path, method_id, scorings)
 
-        results = results.append(scorings, ignore_index=True)
-    return results
+        results.append(scorings)
+    return pd.concat(results, ignore_index=True)
