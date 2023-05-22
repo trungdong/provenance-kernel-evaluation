@@ -6,6 +6,8 @@ MAKEFILE_SINGLE=$(abspath dataset.makefile)
 DATASETS = MIMIC-PXC7 CM-Buildings CM-Routes CM-RouteSets PG-T PG-D
 OUTPUT_DIRS = $(DATASETS:%=outputs/%)
 
+LOG_FILENAME := session_$(shell date -u +%Y%m%d.%H%M%S).txt
+
 help:
 	@echo "Provenance Kernels Evaluation Pipeline Makefile"
 	@echo "Current supported targets: venv, data, kernels, experiments, plots"
@@ -63,13 +65,18 @@ outputs/results.tar:
 	@find outputs -name "timings.pickled" | xargs tar -rvf outputs/results.tar
 	@find outputs -name "selected.csv" | xargs tar -rvf outputs/results.tar
 	@find outputs -name "cv_sets.pickled" | xargs tar -rvf outputs/results.tar
-	@[ ! -f outputs/logs.txt ] || tar -rvf outputs/results.tar outputs/logs.txt
+	@[ ! -f outputs/*.txt ] || tar -rvf outputs/results.tar outputs/*.txt
 	@tar -rvf outputs/results.tar plots/
 
 outputs/results.tar.gz: outputs/results.tar
 	@gzip outputs/results.tar
 
 save-results: outputs/results.tar.gz
+
+run-experiments:
+	# Time the experiments and save any console output to the log file
+	@mkdir -p "outputs"
+	@time $(MAKE) plots | tee outputs/$(LOG_FILENAME)
 
 # Other maintenance goals
 clean:
@@ -78,5 +85,5 @@ clean:
 	rm -rf outputs
 	rm -rf plots
 
-.PHONY: help data clean kernels types experiments plots clean-app-data clean-kernels clean-pickled-kernels clean-cached-experiments clean-experiments save-results
+.PHONY: help data clean kernels types experiments plots clean-app-data clean-kernels clean-pickled-kernels clean-cached-experiments clean-experiments save-results run-experiments
 .PHONY: $(DATASETS)

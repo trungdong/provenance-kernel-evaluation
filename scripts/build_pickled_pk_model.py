@@ -9,7 +9,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
-from scripts.experiments.common import load_kernel_ml_data, SVM_C_PARAMS
+from scripts.experiments.common import load_provenance_kernel_ml_data, SVM_C_PARAMS
 from scripts.utils import load_graph_index, Timer
 
 
@@ -21,7 +21,7 @@ def train_provenance_kernel_pipeline(
     y_column: str,
     including_edge_type_counts: bool = False,
 ) -> Pipeline:
-    X, y = load_kernel_ml_data(
+    X, y = load_provenance_kernel_ml_data(
         graphs, output_path, kernel, level, y_column, including_edge_type_counts
     )
     clf = Pipeline(

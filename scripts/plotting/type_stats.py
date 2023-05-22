@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 import click
 
-from scripts.experiments.common import read_kernel_dataframes
+from scripts.experiments.common import read_provenance_kernel_dataframes
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 @click.argument("output_path", type=click.Path())
 @click.argument("kernel_set")
 def plot_type_stats(data_path, output_path, kernel_set):
-    all_types = read_kernel_dataframes(Path(data_path), kernel_set, to_level=5)
+    all_types = read_provenance_kernel_dataframes(Path(data_path), kernel_set, to_level=5)
     logger.debug("Seen %d types.", all_types.shape[1])
 
     sorted_type_occurences = all_types.sum().sort_values(ascending=False)[:20]

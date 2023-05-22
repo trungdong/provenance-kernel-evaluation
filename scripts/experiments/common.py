@@ -260,7 +260,7 @@ def merge_timings_to_graph_index(graphs: pd.DataFrame, timings: pd.DataFrame):
     return graphs.join(timings, on="graph_file")
 
 
-def read_kernel_dataframes(
+def read_provenance_kernel_dataframes(
     output_path: Path, kernel_set: str, from_level: int = 0, to_level: int = None
 ) -> pd.DataFrame:
     kernel_df_filepath = output_path / "kernels" / f"{kernel_set}_{from_level}.pickled"
@@ -283,17 +283,17 @@ def read_kernel_dataframes(
     return kernels_df
 
 
-def load_kernel_ml_data(
-    graphs: pd.DataFrame,
-    output_path: Path,
-    kernel_set: str,
-    level: int = 0,
-    y_column: str = "label",
-    including_edge_type_counts: bool = False,
-    sparse: bool = True,
+def load_provenance_kernel_ml_data(
+    graphs: pd.DataFrame,                      # loading the rows for only those graphs
+    output_path: Path,                         # the path where the pre-computed `kernels` folder will be found
+    kernel_set: str,                           # which type of provenance kernel (FG or FA)
+    level: int = 0,                            # specifying the level of the kernel (0, 1, 2, 3, 4, 5, ...)
+    y_column: str = "label",                   # the property of a graph to be used as the classification label (y)
+    including_edge_type_counts: bool = False,  # joining the numbers of provenance relations (as ML features)
+    sparse: bool = True,                       # converting the data (X) into a sparse matrix to save memory
 ):
     print("  - Reading kernels...")
-    kernels_df = read_kernel_dataframes(output_path, kernel_set, to_level=level)
+    kernels_df = read_provenance_kernel_dataframes(output_path, kernel_set, to_level=level)
     # filtering the kernels to only selected graphs
     selected_kernels = kernels_df.loc[graphs.graph_file]
 
@@ -312,7 +312,7 @@ def load_kernel_ml_data(
     return X, y
 
 
-def score_accuracy_kernels(
+def score_accuracy_provenance_kernels(
     graphs: pd.DataFrame,
     output_path: Path,
     kernel_set: str = "summary",
@@ -322,7 +322,7 @@ def score_accuracy_kernels(
     including_edge_type_counts: bool = False,
 ):
     print(f"> Testing {kernel_set} up to level-{level}:")
-    X, y = load_kernel_ml_data(
+    X, y = load_provenance_kernel_ml_data(
         graphs, output_path, kernel_set, level, y_column, including_edge_type_counts
     )
     clf = Pipeline(
@@ -345,7 +345,7 @@ def score_accuracy_kernels(
     return scores
 
 
-def test_prediction_on_classifiers(
+def test_prediction_on_ml_classifiers(
     X: pd.DataFrame, output_path: Path, y: pd.Series, cv_sets=10, test_prefix=None
 ):
     if cv_sets is None:
@@ -388,7 +388,7 @@ def test_prediction_on_classifiers(
     return pd.concat(results, ignore_index=True)
 
 
-def test_prediction_on_kernels(
+def test_prediction_with_provenance_kernels(
     graphs: pd.DataFrame, output_path: Path, y_column: str, cv_sets=10
 ):
     if cv_sets is None:
@@ -409,7 +409,7 @@ def test_prediction_on_kernels(
 
         if scorings is None:
             # run the experiment
-            scores = score_accuracy_kernels(
+            scores = score_accuracy_provenance_kernels(
                 graphs,
                 output_path,
                 kernel_set,
@@ -517,7 +517,7 @@ NOT_TESTED = {
 }
 
 
-def test_prediction_on_Grakel_kernels(
+def test_prediction_with_generic_graph_kernels(
     graphs: pd.DataFrame,
     output_path: Path,
     y_column: str,

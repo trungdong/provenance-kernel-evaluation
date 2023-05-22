@@ -11,9 +11,9 @@ from scripts.data.common import NETWORK_METRIC_NAMES
 from scripts.graphkernels import build_grakel_graphs
 from .common import (
     get_fixed_CV_sets,
-    test_prediction_on_classifiers,
-    test_prediction_on_kernels,
-    test_prediction_on_Grakel_kernels,
+    test_prediction_on_ml_classifiers,
+    test_prediction_with_provenance_kernels,
+    test_prediction_with_generic_graph_kernels,
 )
 from scripts.utils import load_graph_index
 
@@ -46,7 +46,7 @@ def run_experiment(dataset_id: str):
     )
     print(f"> Got {len(cv_sets)} cross-validation train/test sets.")
 
-    scoring_pna = test_prediction_on_classifiers(
+    scoring_pna = test_prediction_on_ml_classifiers(
         selected_graphs[NETWORK_METRIC_NAMES],
         outputs_folder,
         selected_graphs.label,
@@ -57,7 +57,7 @@ def run_experiment(dataset_id: str):
 
     scorings = [scoring_pna]
     scorings.append(
-        test_prediction_on_Grakel_kernels(
+        test_prediction_with_generic_graph_kernels(
             selected_graphs,
             outputs_folder,
             "label",
@@ -67,7 +67,7 @@ def run_experiment(dataset_id: str):
     )
 
     scorings.append(
-        test_prediction_on_kernels(selected_graphs, outputs_folder, "label", cv_sets)
+        test_prediction_with_provenance_kernels(selected_graphs, outputs_folder, "label", cv_sets)
     )
 
     print("> Saving scoring to:", output_filepath)
