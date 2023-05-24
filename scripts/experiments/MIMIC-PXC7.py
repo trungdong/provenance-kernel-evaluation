@@ -48,9 +48,6 @@ else:
     # saving the list of selected graphs for later reproduction of this experiment
     selected_graphs.graph_file.to_csv(selected_samples_filepath)
 
-print(f"> Generating GraKeL graphs for {len(selected_graphs)} files")
-selected_graphs = build_grakel_graphs(selected_graphs, dataset_folder)
-
 cv_sets = get_fixed_CV_sets(
     selected_graphs, selected_graphs.dead, output_path=outputs_folder
 )
@@ -66,12 +63,15 @@ scoring_pna = test_prediction_on_ml_classifiers(
 scoring_pna["time"] = selected_graphs.timings_PNA.sum()
 
 scorings = [scoring_pna]
-scorings.append(
-    test_prediction_with_generic_graph_kernels(selected_graphs, outputs_folder, "dead", cv_sets),
-)
 
 scorings.append(
     test_prediction_with_provenance_kernels(selected_graphs, outputs_folder, "dead", cv_sets),
+)
+
+print(f"> Generating GraKeL graphs for {len(selected_graphs)} files")
+selected_graphs = build_grakel_graphs(selected_graphs, dataset_folder)
+scorings.append(
+    test_prediction_with_generic_graph_kernels(selected_graphs, outputs_folder, "dead", cv_sets),
 )
 
 print("> Saving scoring to:", output_filepath)
