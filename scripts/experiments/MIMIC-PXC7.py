@@ -5,9 +5,10 @@ import pandas as pd
 
 from scripts.data.common import NETWORK_METRIC_NAMES
 from scripts.graphkernels import build_grakel_graphs
-from .common import (
+from scripts.experiments.common import (
     get_fixed_CV_sets,
     test_prediction_on_ml_classifiers,
+    test_prediction_with_provenance_types_on_ml_classifiers,
     test_prediction_with_provenance_kernels,
     test_prediction_with_generic_graph_kernels,
 )
@@ -63,6 +64,10 @@ scoring_pna = test_prediction_on_ml_classifiers(
 scoring_pna["time"] = selected_graphs.timings_PNA.sum()
 
 scorings = [scoring_pna]
+
+scorings.append(
+    test_prediction_with_provenance_types_on_ml_classifiers(selected_graphs, outputs_folder, "dead", cv_sets)
+)
 
 scorings.append(
     test_prediction_with_provenance_kernels(selected_graphs, outputs_folder, "dead", cv_sets),

@@ -187,6 +187,54 @@ method_short_names = {
     "TA--3": "AT-3",
     "TA--4": "AT-4",
     "TA--5": "AT-5",
+    "FGT-0-DTree": "G0-DT",
+    "FGT-0-RF": "G0-RF",
+    "FGT-0-K-NB": "G0-K-NB",
+    "FGT-0-NBayes": "G0-NB",
+    "FGT-0-NN": "G0-NN",
+    "FGT-0-SVM": "G0-SVM",
+    "FGT-1-DTree": "G1-DT",
+    "FGT-1-RF": "G1-RF",
+    "FGT-1-K-NB": "G1-K-NB",
+    "FGT-1-NBayes": "G1-NB",
+    "FGT-1-NN": "G1-NN",
+    "FGT-1-SVM": "G1-SVM",
+    "FGT-2-DTree": "G2-DT",
+    "FGT-2-RF": "G2-RF",
+    "FGT-2-K-NB": "G2-K-NB",
+    "FGT-2-NBayes": "G2-NB",
+    "FGT-2-NN": "G2-NN",
+    "FGT-2-SVM": "G2-SVM",
+    "FGT-3-DTree": "G3-DT",
+    "FGT-3-RF": "G3-RF",
+    "FGT-3-K-NB": "G3-K-NB",
+    "FGT-3-NBayes": "G3-NB",
+    "FGT-3-NN": "G3-NN",
+    "FGT-3-SVM": "G3-SVM",
+    "FAT-0-DTree": "A0-DT",
+    "FAT-0-RF": "A0-RF",
+    "FAT-0-K-NB": "A0-K-NB",
+    "FAT-0-NBayes": "A0-NB",
+    "FAT-0-NN": "A0-NN",
+    "FAT-0-SVM": "A0-SVM",
+    "FAT-1-DTree": "A1-DT",
+    "FAT-1-RF": "A1-RF",
+    "FAT-1-K-NB": "A1-K-NB",
+    "FAT-1-NBayes": "A1-NB",
+    "FAT-1-NN": "A1-NN",
+    "FAT-1-SVM": "A1-SVM",
+    "FAT-2-DTree": "A2-DT",
+    "FAT-2-RF": "A2-RF",
+    "FAT-2-K-NB": "A2-K-NB",
+    "FAT-2-NBayes": "A2-NB",
+    "FAT-2-NN": "A2-NN",
+    "FAT-2-SVM": "A2-SVM",
+    "FAT-3-DTree": "A3-DT",
+    "FAT-3-RF": "A3-RF",
+    "FAT-3-K-NB": "A3-K-NB",
+    "FAT-3-NBayes": "A3-NB",
+    "FAT-3-NN": "A3-NN",
+    "FAT-3-SVM": "A3-SVM",
 }
 
 
@@ -382,6 +430,35 @@ def test_prediction_on_ml_classifiers(
             data["time"] = timer.interval
             scorings = pd.DataFrame(data)
             save_experiment_scorings(output_path, method_id, scorings)
+
+        results.append(scorings)
+
+    return pd.concat(results, ignore_index=True)
+
+
+def test_prediction_with_provenance_types_on_ml_classifiers(
+    graphs: pd.DataFrame, output_path: Path, y_column: str, cv_sets=10, including_edge_type_counts: bool = False,
+):
+    results = []
+    # Enumerating the provenance kernels to be tested
+    kernels_levels = itertools.product(["FG", "FA"], range(4))
+    for kernel_set, level in kernels_levels:
+        test_prefix = f"{kernel_set}T-{level}-"  # FGT/FAT-k
+
+        # run the experiment
+        print(f"[ Testing {kernel_set}-{level} provenance types with ML methods ]")
+        X, y = load_provenance_kernel_ml_data(
+            graphs, output_path, kernel_set, level, y_column, including_edge_type_counts,
+            sparse=False,
+        )
+        X = X.to_numpy()
+        scorings = test_prediction_on_ml_classifiers(X, output_path, y, cv_sets, test_prefix)
+        timings_column_name = f"timings_{kernel_set}_{level}"
+        # overwriting the experiment's time with the time generating the provenance types
+        try:
+            scorings["time"] = graphs[timings_column_name].sum()
+        except KeyError:
+            scorings["time"] = 0.0  # this should not happen
 
         results.append(scorings)
 
