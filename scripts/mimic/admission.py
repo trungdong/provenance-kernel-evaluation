@@ -165,6 +165,22 @@ def get_process_entity(prov_bundle: ProvBundle, item: db.Item) -> ProvEntity:
         return entity_process
 
 
+def get_stay_type_from_los(length_of_stay: float):
+    # returns the type of the ward stay depending on the length of stay (in hours)
+    n_days = int(length_of_stay / 24)
+    match n_days:
+        case 0:
+            return ns_type["BriefStay"]      # less than a day
+        case 1:
+            return ns_type["OvernightStay"]  # between 1 and 2 days
+        case 2 | 3 | 4 | 5:
+            return ns_type["MediumStay"]     # between 2 and 6 days
+        case n if n > 5 and n < 14:
+            return ns_type["LongStay"]       # between 6 and 14 days
+        case n if n > 14:
+            return ns_type["ExtendedStay"]   # over 14 days (2 weeks)
+
+
 Procedure = namedtuple(
     "Procedure",
     [
@@ -254,7 +270,11 @@ class Admission:
                 ns_stay[str(transfer.row_id)],
                 transfer.intime,
                 transfer.outtime,
-                [(PROV_TYPE, activity_type), (ns_type["los"], transfer.los)],
+                [
+                    (PROV_TYPE, activity_type),
+                    (PROV_TYPE, get_stay_type_from_los(transfer.los)),
+                    (ns_type["los"], transfer.los)
+                ],
             )
             stay_activity.wasAssociatedWith(unit_agent)
             if transfer.icustay_id is not None:
