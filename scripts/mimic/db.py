@@ -2,7 +2,7 @@ from typing import Tuple, Sequence
 import environs
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 
 # Reading local environment variables
 ROOT_DIR = environs.Path(__file__).parents[2]
@@ -13,7 +13,7 @@ env.read_env(str(ROOT_DIR / ".env"))
 db_uri = env("MIMIC_DB_URI")
 db = create_engine(db_uri)
 Base = automap_base()
-Base.prepare(engine=db, reflect=True, schema="mimiciii")
+Base.prepare(autoload_with=db, schema="mimiciii")
 
 CareGiver = Base.classes.caregivers
 Admission = Base.classes.admissions
@@ -36,7 +36,7 @@ def get_session() -> Session:
     global SHARED_DB_SESSION
     if SHARED_DB_SESSION is None:
         SHARED_DB_SESSION = Session(db)
-        SHARED_DB_SESSION.execute("SET search_path TO mimiciii")
+        SHARED_DB_SESSION.execute(text("SET search_path TO mimiciii"))
 
     return SHARED_DB_SESSION
 
