@@ -14,6 +14,7 @@ $(OUTPUT):
 $(OUTPUT)/graphs.pickled: $(DATASET_FOLDER)/graphs.csv 		$(OUTPUT)
 	@echo "> Generating PNA metrics and application data for $${DATASET}..."
 	@[ -s $@ ] || $(PYTHON) -m scripts.data.$(DATASET)
+	@echo "  Done!"
 
 clean-app-data:
 	rm $(OUTPUT)/graphs.pickled
