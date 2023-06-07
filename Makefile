@@ -48,7 +48,7 @@ datasets/PG-D:
 
 data: datasets/CM-Buildings datasets/CM-Routes datasets/CM-RouteSets datasets/PG-T datasets/PG-D
 
-plots: experiments
+plots: experiments outputs/timings_for_gen_graphs.pickled
 	@echo "> Generating the plots and table included in the paper"
 	@venv/bin/ipython -c "%run plots.ipynb"
 
@@ -87,3 +87,14 @@ clean:
 
 .PHONY: help data clean kernels types experiments plots clean-app-data clean-kernels clean-pickled-kernels clean-cached-experiments clean-experiments save-results run-experiments
 .PHONY: $(DATASETS)
+
+# Measuring the time spent calculating provenance types on randomly generated provenance graphs
+GENERATED_DIR := outputs/generated
+GENERATED_GRAPHS := $(shell echo $(GENERATED_DIR)/{10,100,1000,10000,100000,1000000}_{1,2,4,8,16}_entity_{1..20}_e1.json)
+
+$(GENERATED_DIR)/%.json:
+	@echo Generating $@...
+	@${PROVCONVERT} --generator $(subst _,:,$*) --outfile $@
+
+outputs/timings_for_gen_graphs.pickled: ${GENERATED_GRAPHS}
+	@$(PYTHON) scripts/measure-types-generation-cost.py $(GENERATED_DIR) $@
