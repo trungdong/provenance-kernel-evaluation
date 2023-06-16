@@ -45,13 +45,6 @@ from sklearn.model_selection import (
 )
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import (
-    accuracy_score,
-    f1_score,
-    recall_score,
-    precision_score,
-    make_scorer,
-)
 
 from scipy.sparse import coo_matrix
 
@@ -80,13 +73,7 @@ ML_CLASSIFIERS = {
     ),
 }
 
-scoring = {
-    "accuracy": make_scorer(accuracy_score),
-    "f1": make_scorer(f1_score, average="micro"),
-    "recall": make_scorer(recall_score, average="micro"),
-    "precision": make_scorer(precision_score, average="micro"),
-    # "roc_auc": make_scorer(roc_auc_score)
-}
+scoring = ["accuracy", "f1_micro", "precision_micro", "recall_micro"]
 score_fields = list(map("test_{}".format, scoring))
 
 # defining short names for methods to save space in plots
