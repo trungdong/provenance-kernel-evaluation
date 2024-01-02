@@ -38,12 +38,13 @@ if __name__ == "__main__":
     count_processed = 0
     count_skipped = 0
     graph_filenames = []
-    for admission_id in admissions.index:
+    for row in admissions.itertuples():
+        admission_id = row.Index
         if admission_id in SKIPPED_ADMISSION_IDS:
             continue
 
         json_filename = f"{admission_id}.json"
-        graph_filenames.append((json_filename, admission_id))
+        graph_filenames.append((json_filename, admission_id, row.hospital_expire_flag))
         json_filepath = output_path / json_filename
         if json_filepath.exists():
             logger.debug("Already exists, skipping admission #%d", admission_id)
@@ -59,7 +60,7 @@ if __name__ == "__main__":
 
     logger.info("Processed: %d; Skipped: %d", count_processed, count_skipped)
 
-    graphs_index = pd.DataFrame(graph_filenames, columns=["graph_file", "hadm_id"])
+    graphs_index = pd.DataFrame(graph_filenames, columns=["graph_file", "hadm_id", "label"])
     graphs_index.to_csv(output_path / "graphs.csv", index=False)
 
     db.close_session()
