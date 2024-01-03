@@ -9,7 +9,7 @@ sns.set_context("talk")
 
 
 def plot_bars(data, measure="accuracy", ylim=(0.5, 1.0)):
-    plot = sns.barplot(x="method", y=measure, data=data, errwidth=1, capsize=0.02)
+    plot = sns.barplot(x="method", y=measure, data=data, err_kws={"linewidth": 1}, capsize=0.02)
     plt.xticks(rotation=90)
     plot.set_xlabel("Method")
     plot.set_ylabel(measure.capitalize())
@@ -31,10 +31,4 @@ results = pd.read_pickle(results_folder / "scoring.pickled")
 
 plot = plot_bars(results)
 plot.figure.savefig(plots_folder / f"{dataset_id}-accuracy.pdf")
-plt.close()
-plot = plot_bars(results, "f1")
-plot.figure.savefig(plots_folder / f"{dataset_id}-f1.pdf")
-plt.close()
-plot = plot_bars(results, "recall")
-plot.figure.savefig(plots_folder / f"{dataset_id}-recall.pdf")
 plt.close()
