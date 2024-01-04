@@ -14,6 +14,7 @@ from .common import (
     test_prediction_on_ml_classifiers,
     test_prediction_with_provenance_kernels,
     test_prediction_with_generic_graph_kernels,
+    test_prediction_with_gnn,
 )
 from scripts.utils import load_graph_index
 
@@ -82,6 +83,10 @@ def run_experiment(dataset_id: str):
             selected_graphs, outputs_folder, "trusted", cv_sets,
             ignore_kernels={"GK-GSamp"}  # TODO: investigate why this fails on CM-Buildings
         )
+    )
+
+    scorings.append(
+        test_prediction_with_gnn(selected_graphs, "trusted", dataset_folder, outputs_folder, cv_sets)
     )
 
     print("> Saving scoring to:", output_filepath)

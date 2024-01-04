@@ -4,6 +4,7 @@ from pathlib import Path
 import pandas as pd
 
 from scripts.data.common import NETWORK_METRIC_NAMES
+from scripts.experiments.common import test_prediction_with_gnn
 from scripts.graphkernels import build_grakel_graphs
 from .common import (
     get_fixed_CV_sets,
@@ -72,6 +73,10 @@ print(f"> Generating GraKeL graphs for {len(selected_graphs)} files")
 selected_graphs = build_grakel_graphs(selected_graphs, dataset_folder)
 scorings.append(
     test_prediction_with_generic_graph_kernels(selected_graphs, outputs_folder, "dead", cv_sets),
+)
+
+scorings.append(
+    test_prediction_with_gnn(selected_graphs, "dead", dataset_folder, outputs_folder, cv_sets)
 )
 
 print("> Saving scoring to:", output_filepath)

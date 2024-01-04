@@ -1,6 +1,7 @@
 """Common experiment code."""
 import itertools
 import logging
+from operator import itemgetter
 from pathlib import Path
 import pickle
 from typing import Optional
@@ -47,8 +48,11 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
 from scipy.sparse import coo_matrix
+from torch_geometric.loader import DataLoader
 
 from scripts.data.common import PROV_RELATION_NAMES
+from scripts.experiments.gnn import GATv2Wrapper
+from scripts.experiments.prov2pyg import convert_PROV_graphs_to_PyG_data
 from scripts.utils import Timer, TimeoutException
 
 logger = logging.getLogger(__name__)
@@ -174,6 +178,7 @@ method_short_names = {
     "TA--3": "AT-3",
     "TA--4": "AT-4",
     "TA--5": "AT-5",
+    "GAT2": "GATv2",
 }
 
 
@@ -580,3 +585,53 @@ def test_prediction_with_generic_graph_kernels(
 
         results.append(scorings)
     return pd.concat(results, ignore_index=True)
+
+
+def test_prediction_with_gnn(
+    graphs: pd.DataFrame,
+    y_column: str,
+    dataset_folder: Path,
+    output_path: Path,
+    cv_sets,  # this is mandatory
+):
+    method_id = "GAT2"
+    # load existing scorings
+    scorings = load_experiment_scorings(output_path, method_id)
+
+    if scorings is None:
+        # run the experiment
+        print("Testing GNN: %s" % method_id)
+
+        print(f"> Converting {len(graphs)} PROV graphs to PyTorch Geometric data...")
+        data_list, num_classes = convert_PROV_graphs_to_PyG_data(graphs, y_column, dataset_folder)
+        acc_scores = []
+        timings = []
+        n_runs = len(cv_sets)
+        n_epochs = 50
+        print(f"> Using {n_runs}x preselected train/test sets...")
+        print(f"> Number of training epochs: {n_epochs} (per run)")
+        for train_idx, test_idx in cv_sets:
+            train_list = itemgetter(*train_idx)(data_list)
+            test_list = itemgetter(*test_idx)(data_list)
+            train_loader = DataLoader(train_list, batch_size=32, shuffle=True)
+            test_loader = DataLoader(test_list, batch_size=32)
+            # gnn_wrapper = GCNWrapper(num_classes, hidden_channels=64)
+            gnn_wrapper = GATv2Wrapper(num_classes, edge_dim=data_list[0].edge_attr.shape[1], hidden_channels=64)
+            timer = Timer(verbose=False)
+            with timer:
+                gnn_wrapper.train(train_loader, epochs=50)
+            accuracy = gnn_wrapper.test(test_loader)
+            acc_scores.append(accuracy)
+            timings.append(timer.interval)
+            print(f"  - Training time ({len(acc_scores):3d}/{n_runs}): {timer.interval:.2f}s – Accuracy: {accuracy:.2f}")
+
+        scorings = pd.DataFrame({
+            "accuracy": acc_scores,
+            "method": method_id,
+            "time": timings,
+        })
+        print(f"> Mean accuracy: {scorings.accuracy.mean():.2f}")
+        print(f"> Mean duration: {scorings.time.mean():.2f}s")
+        save_experiment_scorings(output_path, method_id, scorings)
+
+    return scorings

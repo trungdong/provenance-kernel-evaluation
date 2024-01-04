@@ -14,6 +14,7 @@ from .common import (
     test_prediction_on_ml_classifiers,
     test_prediction_with_provenance_kernels,
     test_prediction_with_generic_graph_kernels,
+    test_prediction_with_gnn,
 )
 from scripts.utils import load_graph_index
 
@@ -68,6 +69,10 @@ def run_experiment(dataset_id: str):
             cv_sets,
             ignore_kernels={"GK-GSamp"},
         )
+    )
+
+    scorings.append(
+        test_prediction_with_gnn(selected_graphs, "label", dataset_folder, outputs_folder, cv_sets)
     )
 
     print("> Saving scoring to:", output_filepath)

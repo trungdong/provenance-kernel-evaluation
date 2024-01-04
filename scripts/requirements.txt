@@ -25,5 +25,9 @@ requests
 # Graph kernels
 grakel
 
+# PyTorch Geometric
+torch
+torch_geometric
+
 # LIME
 lime
