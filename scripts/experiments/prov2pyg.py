@@ -1,6 +1,7 @@
 from collections import defaultdict
 import logging
 from pathlib import Path
+from typing import List, Tuple
 
 import click
 import pandas as pd
@@ -198,7 +199,7 @@ def convert_PROV_graphs_to_PyG_data(
     converting_edge_types: bool = True,
     converting_node_attrs: bool = True,
     converting_edge_attrs: bool = True,
-) -> tuple[list[Data], int]:
+) -> Tuple[List[Data], int]:
     converter = PROV2PyGConverter()
     # Indexing the types and attributes of the PROV records found in all the graphs
     logger.info("Indexing %d PROV graphs...", len(graphs))
